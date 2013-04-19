@@ -27,7 +27,8 @@ class QuantityResult(object):
 
 class Cart(models.Model, ItemSet):
 
-    owner = models.ForeignKey(User, null=True, blank=True, related_name='+')
+    # fix: use defferable instead direct auth.User definition (django 1.5+)
+    owner = DeferredForeignKey('user', null=True, blank=True, related_name='+')
     currency = models.CharField(_("currency"), max_length=3,
                                 default=get_default_currency)
     token = models.CharField(max_length=32, blank=True, default='')

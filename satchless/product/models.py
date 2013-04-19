@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 import decimal
 
 from ..item import ItemRange, Item
-from ..util.models import Subtyped
+from ..util.models import Subtyped, DeferredField
 
 __all__ = ('Product', 'Variant')
 
@@ -12,13 +12,13 @@ class Product(Subtyped, ItemRange):
     """
     Django binding for a product group (product with multiple variants)
     """
-    slug = models.SlugField(_('slug'), max_length=80, db_index=True,
-                            unique=True,
-                            help_text=_('Slug will be used in the address of'
-                                        ' the product page. It should be'
-                                        ' URL-friendly (letters, numbers,'
-                                        ' hyphens and underscores only) and'
-                                        ' descriptive for the SEO needs.'))
+    # fix: invert slug field into deffered to allow to alternate if after
+    slug = DeferredField(_('slug'), max_length=80, db_index=True, unique=True,
+                         help_text=_('Slug will be used in the address of'
+                                     ' the product page. It should be'
+                                     ' URL-friendly (letters, numbers,'
+                                     ' hyphens and underscores only) and'
+                                     ' descriptive for the SEO needs.'))
 
     quantity_quantizer = decimal.Decimal(1)
     quantity_rounding = decimal.ROUND_HALF_UP

@@ -46,7 +46,8 @@ class Order(models.Model, ItemSet):
                                    editable=False, blank=True)
     last_status_change = models.DateTimeField(default=datetime.datetime.now,
                                               editable=False, blank=True)
-    user = models.ForeignKey(User, blank=True, null=True, related_name='+')
+    # fix: use defferable instead direct auth.User definition (django 1.5+)
+    user = DeferredForeignKey('user', blank=True, null=True, related_name='+')
     billing_first_name = models.CharField(_("first name"),
                                           max_length=256, blank=True)
     billing_last_name = models.CharField(_("last name"),
