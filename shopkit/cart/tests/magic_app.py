@@ -7,7 +7,7 @@ import os
 
 from ...product.app import MagicProductApp
 from ...product.tests import Parrot, ParrotVariant, DeadParrot, ZombieParrot, DeadParrotVariantForm
-from ...util.tests import ViewsTestCase
+from ...utils.tests import ViewsTestCase
 
 from .. import app
 from . import TestCart, TestCartItem

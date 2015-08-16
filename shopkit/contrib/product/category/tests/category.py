@@ -4,7 +4,7 @@ from django.conf.urls.defaults import patterns, include, url
 from django.core.urlresolvers import reverse, NoReverseMatch
 from django.test import TestCase
 
-from ...util.tests import ViewsTestCase
+from ...utils.tests import ViewsTestCase
 from ..app import MagicCategorizedProductApp
 
 __all__ = ['Views', 'Models', 'CategorizedProductUrlTests']

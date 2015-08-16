@@ -13,8 +13,8 @@ from .app import MagicOrderApp
 from ..checkout.app import CheckoutApp
 from ..cart.tests import cart_app
 from ..product.tests import DeadParrot
-from ..util.models import construct
-from ..util.tests import ViewsTestCase
+from ..utils.models import construct
+from ..utils.tests import ViewsTestCase
 
 
 class TestOrder(construct(models.Order, cart=cart_app.Cart)):

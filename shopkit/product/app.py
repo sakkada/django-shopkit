@@ -1,6 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseNotFound
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.template.response import TemplateResponse
 
 from ..core.app import SatchlessApp, view
@@ -24,28 +24,28 @@ class ProductApp(SatchlessApp):
         assert self.Variant, ('You need to subclass ProductApp and provide'
                               ' Variant')
 
-    def get_product(self, request, product_pk, product_slug):
-        product = get_object_or_404(self.Product, pk=product_pk,
-                                    slug=product_slug)
+    def get_product(self, request, product_pk):
+        product = get_object_or_404(self.Product, pk=product_pk)
         return product.get_subtype_instance()
 
     def get_product_details_templates(self, product):
         return ['satchless/product/view.html']
 
-    @view(r'^\+(?P<product_pk>[0-9]+)-(?P<product_slug>[a-z0-9_-]+)/$',
-          name='details')
+    @view(r'^\+(?P<product_pk>[0-9]+)/$', name='details')
     def product_details(self, request, **kwargs):
         try:
             product = self.get_product(request, **kwargs)
         except ObjectDoesNotExist:
             return HttpResponseNotFound()
+
         context = self.on_product_view(instances=[product], request=request)
         if isinstance(context, HttpResponse):
             return context
+
         context['product'] = product
         context = self.get_context_data(request, **context)
         templates = self.get_product_details_templates(product)
-        return TemplateResponse(request, templates, context)
+        return render(request, templates, context)
 
     def register_product_view_handler(self, handler):
         self.product_view_handlers_queue.add(handler)

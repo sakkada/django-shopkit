@@ -2,7 +2,6 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from ...product.models import Variant
-from ...image.models import Image
 
 
 class ProductSet(models.Model):
@@ -36,11 +35,3 @@ class ProductSetItem(models.Model):
         ordering = ['sort', 'id']
         verbose_name = _("set item")
         verbose_name_plural = _("set items")
-
-
-class ProductSetImage(Image):
-    product = models.ForeignKey(ProductSet, related_name='images')
-    sort = models.PositiveIntegerField()
-
-    class Meta:
-        ordering = ['sort', 'id']

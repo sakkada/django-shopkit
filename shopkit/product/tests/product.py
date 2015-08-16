@@ -7,7 +7,7 @@ from django.conf.urls import patterns, include, url
 from django.core.urlresolvers import reverse
 from django.test import TestCase, Client
 
-from ...util.tests import ViewsTestCase
+from ...utils.tests import ViewsTestCase
 from ..app import MagicProductApp
 from ..forms import FormRegistry, variant_form_for_product
 
@@ -84,11 +84,11 @@ class Models(TestCase):
 class Registry(TestCase):
     def test_form_registry(self):
         registry = FormRegistry()
-        variant_form_for_product(DeadParrot,
-                                 registry=registry)(DeadParrotVariantForm)
-        self.assertEqual(registry.get_handler(DeadParrot),
+        registry.register(DeadParrot)(DeadParrotVariantForm)
+        registry.register(DeadParrot, DeadParrotVariantForm)
+        self.assertEqual(registry.get_formclass(DeadParrot),
                          DeadParrotVariantForm)
-        self.assertEqual(registry.get_handler(ZombieParrot),
+        self.assertEqual(registry.get_formclass(ZombieParrot),
                          DeadParrotVariantForm)
 
 

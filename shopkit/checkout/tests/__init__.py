@@ -11,7 +11,7 @@ from ...cart.tests import cart_app
 from ...core.app import view
 from ...order.tests import order_app
 from ...product.tests import DeadParrot
-from ...util.tests import ViewsTestCase
+from ...utils.tests import ViewsTestCase
 
 
 class BaseCheckoutAppTests(ViewsTestCase):

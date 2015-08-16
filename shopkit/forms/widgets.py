@@ -1,6 +1,6 @@
 from decimal import Decimal
 from django.forms.widgets import TextInput
-from ..util import decimal_format
+from ..utils import decimal_format
 
 class DecimalInput(TextInput):
     def __init__(self, *args, **kwargs):

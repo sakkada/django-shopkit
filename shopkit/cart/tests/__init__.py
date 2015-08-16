@@ -4,7 +4,7 @@ from satchless.item import ItemLine
 
 from ...cart import Cart
 from ...product.tests import product_app
-from ...util.models import construct
+from ...utils.models import construct
 from .. import models
 
 

@@ -1,4 +1,4 @@
-from satchless.item import ItemSet, ItemLine
+from ..item import ItemSet, ItemLine
 
 
 class CartLine(ItemLine):

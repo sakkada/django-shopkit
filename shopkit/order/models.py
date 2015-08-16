@@ -8,8 +8,8 @@ from prices import Price
 import random
 
 from ..item import ItemSet, ItemLine
-from ..util import countries
-from ..util.models import DeferredForeignKey
+from ..utils import countries
+from ..utils.models import DeferredForeignKey
 from . import signals
 
 
@@ -39,6 +39,12 @@ class Order(models.Model, ItemSet):
     )
     cart = DeferredForeignKey('cart', blank=True, null=True,
                               related_name='orders')
+
+    # fix: use defferable instead direct auth.User definition (django 1.5+)
+    #user = DeferredForeignKey(settings.AUTH_USER_MODEL,
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             blank=True, null=True, related_name='+')
+    
     # Do not set the status manually, use .set_status() instead.
     status = models.CharField(_('order status'), max_length=32,
                               choices=STATUS_CHOICES, default='checkout')
@@ -46,8 +52,6 @@ class Order(models.Model, ItemSet):
                                    editable=False, blank=True)
     last_status_change = models.DateTimeField(default=datetime.datetime.now,
                                               editable=False, blank=True)
-    # fix: use defferable instead direct auth.User definition (django 1.5+)
-    user = DeferredForeignKey('user', blank=True, null=True, related_name='+')
     billing_first_name = models.CharField(_("first name"),
                                           max_length=256, blank=True)
     billing_last_name = models.CharField(_("last name"),
@@ -82,6 +86,7 @@ class Order(models.Model, ItemSet):
     class Meta:
         # Use described string to resolve ambiguity of the word 'order' in English.
         abstract = True
+        app_label = 'order'
         verbose_name = _('order (business)')
         verbose_name_plural = _('orders (business)')
         ordering = ('-last_status_change',)

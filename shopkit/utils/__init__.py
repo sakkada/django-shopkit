@@ -1,6 +1,6 @@
+import json
 from decimal import Decimal
 from django.http import HttpResponse
-from django.utils import simplejson
 
 def decimal_format(value, min_decimal_places=0):
     decimal_tuple = value.as_tuple()
@@ -35,7 +35,7 @@ class JSONResponse(HttpResponse):
 
     def __init__(self, content='', mimetype=None, status=None,
                  content_type='application/json'):
-        content = simplejson.dumps(content, default=self.handle_decimal)
+        content = json.dumps(content, default=self.handle_decimal)
         return super(JSONResponse, self).__init__(content=content,
                                                   mimetype=mimetype,
                                                   status=status,

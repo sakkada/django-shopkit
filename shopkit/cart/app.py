@@ -10,8 +10,8 @@ from . import forms
 from . import handler
 from . import models
 from ..core.app import SatchlessApp, view
-from ..util import JSONResponse
-from ..util.models import construct
+from ..utils import JSONResponse
+from ..utils.models import construct
 
 
 class CartApp(SatchlessApp):
@@ -117,6 +117,8 @@ class MagicCartApp(CartApp):
         class EditCartItemForm(forms.EditCartItemForm):
             class Meta:
                 model = cart_item_class
+                fields = '__all__'
+
 
         return EditCartItemForm
 

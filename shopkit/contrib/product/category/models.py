@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from mptt.models import MPTTModel
 
-from ..util.models import DeferredManyToManyField
+from ....utils.models import DeferredManyToManyField
 
 __all__ = ('Category', 'CategorizedProduct')
 
@@ -20,6 +20,7 @@ class Category(MPTTModel):
 
     class Meta:
         abstract = True
+        app_label = 'product'
         verbose_name = _("category")
         verbose_name_plural = _("categories")
 
@@ -38,9 +39,7 @@ class Category(MPTTModel):
 
 class CategorizedProductMixin(models.Model):
 
-    categories = DeferredManyToManyField('category',
-                                         related_name='products',
-                                         null=True)
+    categories = models.ManyToManyField('product.category', related_name='products')
 
     class Meta:
         abstract = True
@@ -52,9 +51,7 @@ class CategorizedProductMixin(models.Model):
         if category or self.get_categories().exists():
             if not category:
                 category = self.categories.all()[0]
-            args = ('%s%s/' % (category.parents_slug_path(),
-                               category.slug),
-                    self.pk, self.slug)
-
+            args = ('%s%s/' % (category.parents_slug_path(), category.slug),
+                    self.pk,)
             return reverse('product:details', args=args)
         return super(CategorizedProductMixin, self).get_absolute_url()

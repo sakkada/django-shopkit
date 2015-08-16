@@ -1,7 +1,7 @@
 from django.shortcuts import redirect
 
 from ..product.models import Product, Variant
-from ..util import JSONResponse
+from ..utils import JSONResponse
 from . import forms
 from . import signals
 

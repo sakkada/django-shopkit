@@ -9,7 +9,8 @@ from django.core.exceptions import ObjectDoesNotExist
 import random
 
 from ..item import ItemSet, ItemLine
-from ..util.models import DeferredForeignKey
+from ..utils.models import DeferredForeignKey
+# from ..utils.models import CheckerMixin, FieldsChecker
 from . import signals
 
 
@@ -22,9 +23,8 @@ QuantityResult = namedtuple('QuantityResult', ['cart_item', 'new_quantity',
 
 
 class Cart(models.Model, ItemSet):
-
-    # fix: use defferable instead direct auth.User definition (django 1.5+)
-    owner = DeferredForeignKey('user', null=True, blank=True, related_name='+')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                              related_name='+')
     currency = models.CharField(_("currency"), max_length=3,
                                 default=get_default_currency)
     token = models.CharField(max_length=32, blank=True, default='')
@@ -139,13 +139,20 @@ class Cart(models.Model, ItemSet):
         return not self.items.exists()
 
 
-class CartItem(models.Model, ItemLine):
+class CartItem(models.Model, ItemLine): # CheckerMixin
 
     cart = DeferredForeignKey('cart', related_name='items', editable=False)
     variant = DeferredForeignKey('variant', related_name='+', editable=False)
     quantity = models.DecimalField(_("quantity"), max_digits=10,
                                    decimal_places=4)
 
+    #checkers = [FieldsChecker(fields={
+    #    'cart': {'type': models.ForeignKey, 'related_query_name': 'items',
+    #             'editable': False,},
+    #    'variant': {'type': models.ForeignKey, 'related_query_name': '+',
+    #                'editable': False,},
+    #})]
+    
     class Meta:
         abstract = True
         unique_together = ('cart', 'variant')

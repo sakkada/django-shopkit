@@ -11,7 +11,7 @@ from .. import app
 from .. import forms
 from ...item import Item, ItemSet, ItemLine
 from ...product.app import ProductApp
-from ...util.tests import ViewsTestCase
+from ...utils.tests import ViewsTestCase
 
 
 class MockProduct(Item):

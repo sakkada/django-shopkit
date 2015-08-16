@@ -1,4 +1,4 @@
-from satchless.cart.signals import cart_content_changed
+from ..cart.signals import cart_content_changed
 
 def cart_content_changed_listener(sender, instance, **kwargs):
     for order in instance.orders.filter(status='checkout'):

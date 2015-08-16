@@ -2,6 +2,7 @@ from collections import defaultdict
 from django.db import models
 from django.db.models.fields.related import SingleRelatedObjectDescriptor
 from django.dispatch import receiver
+from django.core import checks
 
 
 class SubtypedManager(models.Manager):
@@ -56,7 +57,7 @@ class Subtyped(models.Model):
         """
         subtype = self
         path = self.subtype_attr.split()
-        whoami = self._meta.module_name
+        whoami = self._meta.model_name
         remaining = path[path.index(whoami) + 1:]
         for r in remaining:
             subtype = getattr(subtype, r)
@@ -70,7 +71,7 @@ class Subtyped(models.Model):
                 parent = parents[0]
                 path.append(parent)
                 parents = parent._meta.parents.keys()
-            path = [p._meta.module_name for p in reversed(path)]
+            path = [p._meta.model_name for p in reversed(path)]
             self.subtype_attr = ' '.join(path)
 
 
@@ -149,3 +150,58 @@ def construct(cls, **kwargs):
         clsname = clsname.replace('-', '_')
         cls._classcache[key] = type(clsname, (cls, ), attrs)
     return cls._classcache[key]
+
+
+class Checker(object):
+    def check(self, cls, errors, **kwargs):
+        raise NotImplementedError
+
+
+class FieldsChecker(object):
+    fields = None
+    
+    def __init__(self, fields=None):
+        self.fields = fields
+
+    def check(self, cls, errors, **kwargs):
+        modelfields = dict([(i.name, i,) for i in cls._meta.get_fields()])
+        for cname, cfield in self.fields.items():
+            field = modelfields.get(cname, None)
+            if field:
+                valid, ckey, cval = True, None, None
+                for ckey, cval in cfield.items():
+                    if ckey == 'type':
+                        if not isinstance(field, cval):
+                            valid = False
+                            break
+                    else:
+                        attr = getattr(field, ckey, None)
+                        if not any((attr==cval,
+                                    (attr() if callable(attr) else attr)==cval,)):
+                            valid = False
+                            break
+                if valid:
+                    continue
+
+                errors.append(checks.Error(
+                    "Field '%s:%s' does not passed rule '%s:%s'."
+                    % (cls.__name__, cname, ckey, cval,),
+                    hint=None, obj=None, id='shopkit.E002'
+                ))
+            else:
+                errors.append(checks.Error(
+                    "Model '%s' does not contains field '%s'."
+                    % (cls.__name__, cname,),
+                    hint=None, obj=None, id='shopkit.E001'
+                ))
+                
+
+class CheckerMixin(object):
+    checkers = None
+    
+    @classmethod
+    def check(cls, **kwargs):
+        errors = super(CheckerMixin, cls).check(**kwargs)
+        for check in cls.checkers or []:
+            check.check(cls, errors, **kwargs)
+        return errors

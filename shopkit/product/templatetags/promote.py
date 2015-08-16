@@ -18,12 +18,8 @@ class PromoteNode(template.Node):
 
 @register.tag(name='promote')
 def do_promote(parser, token):
-    class PromoteParser(template.TokenParser):
-        def top(self):
-            arg = self.value()
-            assert self.tag() == 'as'
-            var_name = self.tag()
-            return (arg, var_name)
+    args = token.split_contents() # ['promote', 'var', 'as', 'newvar',]
+    assert all((len(args) == 4, args[0] == 'promote', args[-2] == 'as',))
 
-    arg, var_name = PromoteParser(token.contents).top()
+    arg, var_name = args[1], args[-1]
     return PromoteNode(arg, var_name)

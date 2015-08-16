@@ -14,5 +14,6 @@ class PostShippingType(models.Model):
         return self.name
 
     class Meta:
+        app_label = 'delivery'
         verbose_name = _('Post shipping type')
         verbose_name_plural = _('Post shipping types')

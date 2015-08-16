@@ -2,10 +2,10 @@ from django.http import Http404
 from django.http import HttpResponseNotFound
 from django.template.response import TemplateResponse
 
-from ..core.app import view
-from ..product import app
-from ..product import models as product_models
-from ..util.models import construct
+from ....core.app import view
+from ....product import app
+from ....product import models as product_models
+from ....utils.models import construct
 from . import models
 
 
@@ -49,7 +49,7 @@ class CategorizedProductApp(app.ProductApp):
     def category_list(self, request):
         context = self.get_context_data(request)
         format_data = {
-            'category_model': self.Category._meta.module_name,
+            'category_model': self.Category._meta.model_name,
         }
         templates = [p % format_data for p in self.category_list_templates]
         return TemplateResponse(request, templates, context)
@@ -67,12 +67,12 @@ class CategorizedProductApp(app.ProductApp):
         category = path[-1]
         context = self.get_context_data(request, category=category, path=path)
         format_data = {
-            'category_model': category._meta.module_name,
+            'category_model': category._meta.model_name,
         }
         templates = [p % format_data for p in self.category_details_templates]
         return TemplateResponse(request, templates, context)
 
-    @view(r'^(?P<category_slugs>([a-z0-9_-]+/)+)\+(?P<product_pk>[0-9]+)-(?P<product_slug>[a-z0-9_-]+)/$',
+    @view(r'^(?P<category_slugs>([a-z0-9_-]+/)+)\+(?P<product_pk>[0-9]+)/$',
           name='details')
     def product_details(self, request, **kwargs):
         return super(CategorizedProductApp, self).product_details(request,
@@ -88,13 +88,11 @@ class CategorizedProductApp(app.ProductApp):
             })
         return context
 
-    def get_product(self, request, category_slugs='', product_slug=None,
+    def get_product(self, request, category_slugs='',
                     product_pk=None):
         slugs = category_slugs.split('/')
         path = self.path_from_slugs(filter(None, slugs))
         products = self.Product.objects.all()
-        if product_slug:
-            products = products.filter(slug=product_slug)
         if product_pk:
             products = products.filter(pk=product_pk)
         if len(path):

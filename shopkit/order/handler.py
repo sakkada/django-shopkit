@@ -1,4 +1,4 @@
-from satchless.core.handler import QueueHandler
+from ..core.handler import QueueHandler
 
 from ..delivery import DeliveryProvider, DeliveryType
 from ..payment import PaymentProvider, PaymentType

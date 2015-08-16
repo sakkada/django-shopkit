@@ -4,7 +4,7 @@ from django.template.response import TemplateResponse
 from django.utils.decorators import method_decorator
 
 from ..core.app import SatchlessApp, view
-from ..util.models import construct
+from ..utils.models import construct
 from . import models
 
 
@@ -33,7 +33,7 @@ class OrderApp(SatchlessApp):
         orders = self.Order.objects.filter(user=request.user)
         context = self.get_context_data(request, orders=orders)
         format_data = {
-            'order_model': self.Order._meta.module_name
+            'order_model': self.Order._meta.model_name
         }
         templates = [p % format_data for p in self.order_list_templates]
         return TemplateResponse(request, templates, context)
@@ -43,7 +43,7 @@ class OrderApp(SatchlessApp):
         order = self.get_order(request, order_token=order_token)
         context = self.get_context_data(request, order=order)
         format_data = {
-            'order_model': order._meta.module_name
+            'order_model': order._meta.model_name
         }
         templates = [p % format_data for p in self.order_details_templates]
         return TemplateResponse(request, templates, context)
@@ -77,7 +77,6 @@ class MagicOrderApp(OrderApp):
     def construct_order_class(self, cart_class):
         class Order(construct(models.Order, cart=cart_class)):
             pass
-
         return Order
 
     def construct_delivery_group_class(self, order_class):

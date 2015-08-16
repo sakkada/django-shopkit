@@ -81,7 +81,7 @@ class EditCartItemForm(forms.ModelForm, QuantityForm):
 def add_to_cart_variant_form_for_product(product,
                                          addtocart_formclass=AddToCartForm,
                                          registry=registry):
-    variant_formclass = registry.get_handler(type(product))
+    variant_formclass = registry.get_formclass(type(product))
 
     class AddVariantToCartForm(addtocart_formclass, variant_formclass):
         pass
