@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from mptt.models import MPTTModel
 
-from ....utils.models import DeferredManyToManyField
+# from ....utils.models import DeferredManyToManyField
 
 __all__ = ('Category', 'CategorizedProduct')
 

@@ -10,8 +10,8 @@ class SingleStepCheckoutApp(app.CheckoutApp):
         'satchless/checkout/checkout.html'
     ]
 
-    def __init__(self, *args, **kwargs):
-        super(SingleStepCheckoutApp, self).__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super(SingleStepCheckoutApp, self).__init__(**kwargs)
         assert self.BillingForm, ('You need to subclass SingleStepCheckoutApp '
                                   'and provide BillingForm')
 

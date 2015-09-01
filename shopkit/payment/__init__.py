@@ -12,6 +12,13 @@ class ConfirmationFormNeeded(Exception):
         self.method = method
 
 
+class RedirectRequired(Exception):
+    """Exception to be used when payment processsing requires a redirect"""
+    def __init__(self, url=None):
+        super(RedirectRequired, self).__init__()
+        self.url = url
+
+
 class PaymentType(object):
     name = None
     provider = None

@@ -18,13 +18,13 @@ class CheckoutApp(SatchlessApp):
     app_name = 'checkout'
     namespace = 'checkout'
     order_session_key = 'checkout-order'
+
     Order = None
     confirmation_templates = [
         'satchless/checkout/confirmation.html',
     ]
 
-    def __init__(self, cart_app, *args, **kwargs):
-        self.cart_app = cart_app
+    def __init__(self, **kwargs):
         self.delivery_queue = kwargs.pop('delivery_provider',
             handler.DeliveryQueue(*getattr(settings, 'SATCHLESS_DELIVERY_PROVIDERS', [])))
 
@@ -35,8 +35,17 @@ class CheckoutApp(SatchlessApp):
             handler.PartitionerQueue(*getattr(settings, 'SATCHLESS_ORDER_PARTITIONERS',
                                               [SimplePartitioner])))
 
-        super(CheckoutApp, self).__init__(*args, **kwargs)
+        super(CheckoutApp, self).__init__(**kwargs)
         assert self.Order, ('You need to subclass CheckoutApp and provide Order')
+
+    def redirect_order(self, order):
+        if not order or order.is_empty():
+            return self.shop_app.cart_app.redirect('details')
+        elif order.status == 'checkout':
+            return self.redirect('checkout', order_token=order.token)
+        elif order.status == 'payment-pending':
+            return self.redirect('confirmation', order_token=order.token)
+        return redirect('order:details', order_token=order.token)
 
     def get_order(self, request, order_token):
         try:
@@ -44,62 +53,59 @@ class CheckoutApp(SatchlessApp):
         except self.Order.DoesNotExist:
             return
 
-    def redirect_order(self, order):
-        if not order or order.is_empty():
-            return self.cart_app.redirect('details')
-        elif order.status == 'checkout':
-            return self.redirect('checkout',
-                                 order_token=order.token)
-        elif order.status == 'payment-pending':
-            return self.redirect('confirmation',
-                                 order_token=order.token)
-        return redirect('order:details', order_token=order.token)
-
-    def partition_cart(self, cart, order, **pricing_context):
-        delivery_groups, remaining_items = self.delivery_partitioner.partition(
-            cart, cart.get_all_items())
-        if remaining_items:
-            raise ImproperlyConfigured('Unhandled items remaining in cart.')
-        for delivery_group in filter(None, delivery_groups):
-            order_delivery_group = order.create_delivery_group(delivery_group)
-            for cartitem in delivery_group:
-                price = cartitem.get_price_per_item(
-                    quantity=cartitem.quantity, cart=cartitem.cart,
-                    cartitem=cartitem, **pricing_context)
-                order_delivery_group.add_item(cartitem.variant,
-                                              cartitem.quantity, price)
-
     def get_order_from_cart(self, request, cart, order=None):
         if not order:
-            order = self.Order.objects.create(cart=cart, user=cart.owner)
+            order = self.Order.objects.create()
         elif order.is_empty():
             order.groups.all().delete()
+
         self.partition_cart(cart, order)
-        previous_orders = self.Order.objects.filter(
-            Q(cart=cart) & Q(status='checkout') & ~Q(pk=order.pk))
-        previous_orders.delete()
         return order
+
+    def clear_cart(self, request):
+        cart = self.shop_app.cart_app.get_cart_for_request(request)
+        cart.clear()
+        return cart
+
+    def partition_cart(self, cart, order, **pricing_context):
+        partitions, remaining = self.delivery_partitioner.partition(cart, None)
+        
+        if remaining:
+            raise ImproperlyConfigured('Unhandled items remaining in cart.')
+        for partition in filter(None, partitions):
+            delivery_group = order.create_delivery_group(partition)
+            for cartline in partition:
+                price = cartline.get_price_per_item(cart=cart,
+                                                    **pricing_context)
+                delivery_group.add_item(cartline.product,
+                                        cartline.quantity, price)
 
     @view(r'^prepare-order/$', name='prepare-order')
     @method_decorator(require_POST)
     def prepare_order(self, request):
-        cart = self.cart_app.get_cart_for_request(request)
-        if cart.is_empty():
-            return self.cart_app.redirect('details')
+        cart = self.shop_app.cart_app.get_cart_for_request(request)
+        if not len(cart):
+            return self.shop_app.cart_app.redirect('details')
 
-        order_pk = request.session.get(self.order_session_key)
-        order = None
-        if order_pk:
+        order = request.session.get(self.order_session_key, None)
+        if order:
             try:
-                order = self.Order.objects.get(pk=order_pk, cart=cart,
-                                               status='checkout')
+                order = self.Order.objects.get(pk=order, status='checkout')
             except self.Order.DoesNotExist:
-                pass
+                order = None
+
         if not order or order.is_empty():
             order = self.get_order_from_cart(request, cart)
-        if request.user.is_authenticated() and order.user != request.user:
-            order.user = request.user
+
+        # set user to order and erase all previous orders in checkout status
+        user = request.user if request.user.is_authenticated() else None
+        if user and order.user != user:
+            order.user = user
             order.save()
+        if user:
+            self.Order.objects.filter(status='checkout',
+                                      user=user).exclude(pk=order.pk).delete()
+
         request.session[self.order_session_key] = order.pk
         return self.redirect('checkout', order_token=order.token)
 
@@ -128,10 +134,10 @@ class CheckoutApp(SatchlessApp):
         try:
             self.payment_queue.confirm(order=order)
         except ConfirmationFormNeeded, e:
-            return TemplateResponse(request, self.confirmation_templates, {
-                'formdata': e,
-                'order': order,
-            })
+            return TemplateResponse(request, self.confirmation_templates,
+                                    {'formdata': e, 'order': order,})
+        except RedirectNeeded, e:
+            return redirect(e.url)
         except PaymentFailure:
             order.set_status('payment-failed')
         else:

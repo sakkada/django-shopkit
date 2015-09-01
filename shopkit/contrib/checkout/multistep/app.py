@@ -30,8 +30,8 @@ class MultiStepCheckoutApp(app.CheckoutApp):
     ShippingForm = None
     ShippingFormSet = None
 
-    def __init__(self, *args, **kwargs):
-        super(MultiStepCheckoutApp, self).__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super(MultiStepCheckoutApp, self).__init__(**kwargs)
         assert ((self.ShippingForm or self.ShippingFormSet) and
                 (self.DeliveryMethodFormSet or self.DeliveryMethodForm) and
                 self.BillingForm), (

@@ -9,7 +9,8 @@ import random
 
 from ..item import ItemSet, ItemLine
 from ..utils import countries
-from ..utils.models import DeferredForeignKey
+#from ..utils.models import DeferredForeignKey
+from ..utils.models import CheckerMixin, FieldsChecker
 from . import signals
 
 
@@ -37,8 +38,6 @@ class Order(models.Model, ItemSet):
         ('delivery', _('shipped')),
         ('cancelled', _('cancelled')),
     )
-    cart = DeferredForeignKey('cart', blank=True, null=True,
-                              related_name='orders')
 
     # fix: use defferable instead direct auth.User definition (django 1.5+)
     #user = DeferredForeignKey(settings.AUTH_USER_MODEL,
@@ -52,6 +51,7 @@ class Order(models.Model, ItemSet):
                                    editable=False, blank=True)
     last_status_change = models.DateTimeField(default=datetime.datetime.now,
                                               editable=False, blank=True)
+
     billing_first_name = models.CharField(_("first name"),
                                           max_length=256, blank=True)
     billing_last_name = models.CharField(_("last name"),
@@ -73,6 +73,7 @@ class Order(models.Model, ItemSet):
     billing_tax_id = models.CharField(_("tax ID"), max_length=40, blank=True)
     billing_phone = models.CharField(_("phone number"),
                                      max_length=30, blank=True)
+
     payment_type = models.CharField(max_length=256, blank=True)
     payment_type_name = models.CharField(_('name'), max_length=128, blank=True,
                                          editable=False)
@@ -81,6 +82,7 @@ class Order(models.Model, ItemSet):
                                currency=settings.SATCHLESS_DEFAULT_CURRENCY,
                                max_digits=12, decimal_places=4, default=0,
                                editable=False)
+
     token = models.CharField(max_length=32, blank=True, default='')
 
     class Meta:
@@ -121,7 +123,7 @@ class Order(models.Model, ItemSet):
     def set_status(self, new_status):
         old_status = self.status
         self.status = new_status
-        self.last_status_change = datetime.datetime.now()
+        self.last_status_change = datetime.datetime.now() # timezone todo
         self.save()
         signals.order_status_changed.send(sender=type(self), instance=self,
                                           old_status=old_status)
@@ -160,19 +162,21 @@ class DeliveryInfo(ItemLine):
         return self.price
 
 
-class DeliveryGroup(models.Model, ItemSet):
+class DeliveryGroup(CheckerMixin, models.Model, ItemSet):
 
-    order = DeferredForeignKey('order', related_name='groups', editable=False)
-    delivery_price = PriceField(_('unit price'),
-                                currency=settings.SATCHLESS_DEFAULT_CURRENCY,
-                                max_digits=12, decimal_places=4,
-                                default=0, editable=False)
+    # order = DeferredForeignKey('order', related_name='groups', editable=False)
+
     delivery_type = models.CharField(max_length=256, blank=True)
     delivery_type_name = models.CharField(_('name'), max_length=128, blank=True,
                                           editable=False)
     delivery_type_description = models.TextField(_('description'), blank=True,
                                                  editable=False)
+    delivery_price = PriceField(_('unit price'), default=0, editable=False,
+                                max_digits=12, decimal_places=4,
+                                currency=settings.SATCHLESS_DEFAULT_CURRENCY)
+
     require_shipping_address = models.BooleanField(default=False, editable=False)
+
     shipping_first_name = models.CharField(_("first name"), max_length=256)
     shipping_last_name = models.CharField(_("last name"), max_length=256)
     shipping_company_name = models.CharField(_("company name"),
@@ -191,8 +195,14 @@ class DeliveryGroup(models.Model, ItemSet):
     shipping_phone = models.CharField(_("phone number"),
                                       max_length=30, blank=True)
 
+    checkers = [FieldsChecker({
+        'order': {'type': models.ForeignKey, 'related_query_name()': 'groups',
+                  'editable': False,},
+    })]
+
     class Meta:
         abstract = True
+        app_label = 'order'
 
     def __iter__(self):
         for i in self.get_items():
@@ -219,13 +229,22 @@ class DeliveryGroup(models.Model, ItemSet):
                                  unit_price_gross=price.gross)
 
 
-class OrderedItem(models.Model, ItemLine):
+class OrderedItem(CheckerMixin, models.Model, ItemLine):
 
-    delivery_group = DeferredForeignKey('delivery_group', related_name='items',
-                                        editable=False)
-    product_variant = DeferredForeignKey('variant', blank=True, null=True,
-                                         related_name='+',
-                                         on_delete=models.SET_NULL)
+    checkers = [FieldsChecker({
+        'delivery_group': {'type': models.ForeignKey, 'editable': False,
+                           'related_query_name()': 'items',},
+        'product_variant': {'type': models.ForeignKey, 'editable': True,
+                            'blank': True, 'null': True,
+                            'rel.on_delete': models.SET_NULL,
+                            'related_query_name()': '+',},
+    })]
+
+    #delivery_group = DeferredForeignKey('delivery_group', related_name='items',
+    #                                    editable=False)
+    #product_variant = DeferredForeignKey('variant', blank=True, null=True,
+    #                                     related_name='+',
+    #                                     on_delete=models.SET_NULL)
     product_name = models.CharField(max_length=128)
     quantity = models.DecimalField(_('quantity'),
                                    max_digits=10, decimal_places=4)
@@ -236,6 +255,7 @@ class OrderedItem(models.Model, ItemLine):
 
     class Meta:
         abstract = True
+        app_label = 'order'
 
     def get_price_per_item(self, **kwargs):
         return Price(net=self.unit_price_net, gross=self.unit_price_gross,

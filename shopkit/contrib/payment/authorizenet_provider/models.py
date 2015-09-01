@@ -2,7 +2,7 @@ import authorizenet
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from ....utils.models import DeferredOneToOneField
+#from ....utils.models import DeferredOneToOneField
 
 class AuthorizeNetPaymentBase(models.Model):
     cc_name = models.CharField(_('Name on Credit Card'), max_length=128)
@@ -11,7 +11,7 @@ class AuthorizeNetPaymentBase(models.Model):
     cc_cvv2 = models.CharField(_('CVV2 Security Number'), max_length=4)
     response = models.ForeignKey(authorizenet.models.Response, null=True,
                                  blank=True, editable=False)
-    order = DeferredOneToOneField('order', related_name='payment', editable=False)
+    #order = DeferredOneToOneField('order', related_name='payment', editable=False)
 
     class Meta:
         abstract = True

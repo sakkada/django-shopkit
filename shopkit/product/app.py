@@ -12,12 +12,15 @@ class ProductApp(SatchlessApp):
 
     app_name = 'product'
     namespace = 'product'
+
     Product = None
     Variant = None
+
     product_view_handlers_queue = None
 
-    def __init__(self, *args, **kwargs):
-        super(ProductApp, self).__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super(ProductApp, self).__init__(**kwargs)
+
         self.product_view_handlers_queue = set()
         assert self.Product, ('You need to subclass ProductApp and provide'
                               ' Product')
@@ -59,6 +62,7 @@ class ProductApp(SatchlessApp):
         return context
 
 
+"""
 class MagicProductApp(ProductApp):
 
     def __init__(self, **kwargs):
@@ -77,3 +81,4 @@ class MagicProductApp(ProductApp):
         class Variant(models.Variant):
             pass
         return Variant
+"""

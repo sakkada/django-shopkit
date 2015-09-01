@@ -4,7 +4,7 @@ from django.template.response import TemplateResponse
 from django.utils.decorators import method_decorator
 
 from ..core.app import SatchlessApp, view
-from ..utils.models import construct
+#from ..utils.models import construct
 from . import models
 
 
@@ -22,8 +22,8 @@ class OrderApp(SatchlessApp):
         'satchless/order/%(order_model)s/my_orders.html'
     ]
 
-    def __init__(self, *args, **kwargs):
-        super(OrderApp, self).__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super(OrderApp, self).__init__(**kwargs)
         assert self.Order, ('You need to subclass OrderApp and provide'
                             ' Order')
 
@@ -57,39 +57,40 @@ class OrderApp(SatchlessApp):
         return order
 
 
+"""
 class MagicOrderApp(OrderApp):
 
     DeliveryGroup = None
     OrderedItem = None
 
-    def __init__(self, cart_app, **kwargs):
-        self.Order = (self.Order or
-                      self.construct_order_class(cart_app.Cart))
-        self.DeliveryGroup = (self.DeliveryGroup or
-                              self.construct_delivery_group_class(self.Order))
+    def __init__(self, shop_app=None, **kwargs):
+        #self.Order = (self.Order or self.construct_order_class())
+        #self.DeliveryGroup = (self.DeliveryGroup or
+        #                      self.construct_delivery_group_class(self.Order))
+        #self.OrderedItem = (
+        #    self.OrderedItem or
+        #    self.construct_ordered_item_class(self.DeliveryGroup,
+        #                                      shop_app.product_app.Variant))
+        super(MagicOrderApp, self).__init__(shop_app=shop_app, **kwargs)
 
-        self.OrderedItem = (
-            self.OrderedItem or
-            self.construct_ordered_item_class(self.DeliveryGroup,
-                                              cart_app.product_app.Variant))
-        super(MagicOrderApp, self).__init__(**kwargs)
+    #def construct_delivery_group_class(self, order_class):
+    #    class DeliveryGroup(construct(models.DeliveryGroup,
+    #                                  order=order_class)):
+    #        pass
+    #
+    #    return DeliveryGroup
 
-    def construct_order_class(self, cart_class):
-        class Order(construct(models.Order, cart=cart_class)):
-            pass
-        return Order
+    #def construct_order_class(self):
+    #    class Order(models.Order):
+    #        pass
+    #    return Order
 
-    def construct_delivery_group_class(self, order_class):
-        class DeliveryGroup(construct(models.DeliveryGroup,
-                                      order=order_class)):
-            pass
+    #def construct_ordered_item_class(self, delivery_group_class, variant_class):
+    #    class OrderedItem(construct(models.OrderedItem,
+    #                                delivery_group=delivery_group_class,
+    #                                variant=variant_class)):
+    #        pass
+    #
+    #    return OrderedItem
+"""
 
-        return DeliveryGroup
-
-    def construct_ordered_item_class(self, delivery_group_class, variant_class):
-        class OrderedItem(construct(models.OrderedItem,
-                                    delivery_group=delivery_group_class,
-                                    variant=variant_class)):
-            pass
-
-        return OrderedItem

@@ -5,7 +5,7 @@ from django.template.response import TemplateResponse
 from ....core.app import view
 from ....product import app
 from ....product import models as product_models
-from ....utils.models import construct
+#from ....utils.models import construct
 from . import models
 
 
@@ -22,8 +22,8 @@ class CategorizedProductApp(app.ProductApp):
         'satchless/category/list.html',
     ]
 
-    def __init__(self, *args, **kwargs):
-        super(CategorizedProductApp, self).__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super(CategorizedProductApp, self).__init__(**kwargs)
         assert self.Category, ('You need to subclass CategorizedProductApp and'
                                ' provide Category')
 
@@ -106,6 +106,7 @@ class CategorizedProductApp(app.ProductApp):
         return product
 
 
+"""
 class MagicCategorizedProductApp(CategorizedProductApp, app.MagicProductApp):
 
     def __init__(self, **kwargs):
@@ -127,3 +128,5 @@ class MagicCategorizedProductApp(CategorizedProductApp, app.MagicProductApp):
         class Category(models.Category):
             pass
         return Category
+
+"""

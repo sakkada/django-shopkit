@@ -11,34 +11,35 @@ from . import handler
 from . import models
 from ..core.app import SatchlessApp, view
 from ..utils import JSONResponse
-from ..utils.models import construct
 
 
 class CartApp(SatchlessApp):
 
     app_name = 'cart'
     namespace = 'cart'
-    CartItemForm = None
+    CartLineForm = None
     Cart = None
 
     cart_templates = [
         'satchless/cart/view.html'
     ]
 
-    def __init__(self, *args, **kwargs):
-        super(CartApp, self).__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super(CartApp, self).__init__(**kwargs)
         assert self.Cart, ('You need to subclass CartApp and provide Cart')
-        assert self.CartItemForm, ('You need to subclass CartApp and'
-                                   ' provide CartItemForm')
+        assert self.CartLineForm, ('You need to subclass CartApp and'
+                                   ' provide CartLineForm')
 
     def get_cart_for_request(self, request):
         raise NotImplementedError()
 
-    def _get_cart_item_form(self, request, item):
-        prefix = 'cart-%i' % (item.id,)
-        form = self.CartItemForm(data=request.POST or None,
-                                 instance=item,
-                                 prefix=prefix)
+    def _get_cart_item_form(self, request, cart, item):
+        initial = {'quantity': item.get_quantity() or None,}
+        form = self.CartLineForm(data=request.POST or None,
+                                 cart=cart,
+                                 product=item.product,
+                                 prefix='cart-%i' % (item.product.id,),
+                                 initial=initial)
         return form
 
     def cart_item_form_valid(self, request, form, item):
@@ -47,8 +48,8 @@ class CartApp(SatchlessApp):
 
     def _handle_cart(self, cart, request):
         cart_item_forms = []
-        for item in cart.get_all_items():
-            form = self._get_cart_item_form(request, item)
+        for item in cart:
+            form = self._get_cart_item_form(request, cart, item)
             if request.method == 'POST' and form.is_valid():
                 return self.cart_item_form_valid(request, form, item)
             cart_item_forms.append(form)
@@ -66,7 +67,7 @@ class CartApp(SatchlessApp):
         context = self.get_context_data(request, **context)
         response = TemplateResponse(request, self.cart_templates, context)
         if request.is_ajax():
-            return JSONResponse({'total': len(cart.get_all_items()),
+            return JSONResponse({'total': len(cart),
                                  'html': response.rendered_content})
         return response
 
@@ -81,60 +82,5 @@ class CartApp(SatchlessApp):
         cart.replace_item(item.variant, 0)
         return self.redirect('details')
 
-
-class MagicCartApp(CartApp):
-
-    CartItem = None
-    AddToCartHandler = handler.AddToCartHandler
-
-    def __init__(self, product_app, **kwargs):
-        self.product_app = product_app
-
-        self.Cart = self.Cart or self.construct_cart_class()
-        self.CartItem = (self.CartItem or
-                         self.construct_cart_item_class(self.Cart,
-                                                        product_app.Variant))
-        self.CartItemForm = (
-            self.CartItemForm or
-            self.construct_cart_item_form_class(self.CartItem))
-        if self.AddToCartHandler:
-            add_to_cart_handler = self.AddToCartHandler(cart_app=self)
-            product_app.register_product_view_handler(add_to_cart_handler)
-        super(MagicCartApp, self).__init__(**kwargs)
-
-    def construct_cart_class(self):
-        class Cart(models.Cart):
-            pass
-        return Cart
-
-    def construct_cart_item_class(self, cart_class, variant_class):
-        class CartItem(construct(models.CartItem, cart=cart_class,
-                                 variant=variant_class)):
-            pass
-        return CartItem
-
-    def construct_cart_item_form_class(self, cart_item_class):
-        class EditCartItemForm(forms.EditCartItemForm):
-            class Meta:
-                model = cart_item_class
-                fields = '__all__'
-
-
-        return EditCartItemForm
-
-    @property
-    def cart_session_key(self):
-        return '_satchless_cart'
-
     def get_cart_for_request(self, request):
-        try:
-            token = request.session[self.cart_session_key]
-            cart = self.Cart.objects.get(token=token)
-        except (self.Cart.DoesNotExist, KeyError):
-            owner = request.user if request.user.is_authenticated() else None
-            cart = self.Cart.objects.create(owner=owner)
-            request.session[self.cart_session_key] = cart.token
-        if cart.owner is None and request.user.is_authenticated():
-            cart.owner = request.user
-            cart.save()
-        return cart
+        raise NotImplementedError

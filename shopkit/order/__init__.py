@@ -1,9 +1,9 @@
 '''
 Order handling
 '''
-from . import listeners
-
-listeners.start_listening()
+#from . import listeners
+#
+#listeners.start_listening()
 
 
 class Partition(list):
@@ -14,6 +14,9 @@ class Partition(list):
     def __init__(self, items, shipping=False):
         super(Partition, self).__init__(items)
         self.is_shipping = shipping
+ 
+    def __repr__(self):
+        return '<Partition:%s>' % super(Partition, self).__repr__()
 
 
 class Partitioner(object):

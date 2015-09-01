@@ -8,14 +8,13 @@ from . import Partitioner
 class PartitionerQueue(Partitioner, QueueHandler):
     element_class = Partitioner
 
-    def partition(self, cart, items):
-        groups = []
-        remaining_items = items or list(cart.get_all_items())
+    def partition(self, cart, remaining):
+        partitions = []
+        remaining = remaining or list(cart)
         for handler in self.queue:
-            handled_groups, remaining_items = handler.partition(cart,
-                                                                remaining_items)
-            groups += handled_groups
-        return groups, remaining_items
+            handled_ps, remaining = handler.partition(cart, remaining)
+            partitions += handled_ps
+        return partitions, remaining
 
 
 ### PAYMENT PROVIDERS

@@ -81,33 +81,35 @@ def _store_content_type(sender, instance, **kwargs):
         instance.store_subtype(instance)
 
 
-class DeferredField(object):
-
-    klass = models.Field
-
-    def __init__(self, model_alias, **kwargs):
-        self.model_alias = model_alias
-        self.kwargs = kwargs
-
-    def bind(self, model):
-        return self.klass(model, **self.kwargs)
-
-
-class DeferredForeignKey(DeferredField):
-
-    klass = models.ForeignKey
+#class DeferredField(object):
+#
+#    klass = models.Field
+#
+#    def __init__(self, model_alias, **kwargs):
+#        self.model_alias = model_alias
+#        self.kwargs = kwargs
+#        raise
+#
+#    def bind(self, model):
+#        return self.klass(model, **self.kwargs)
 
 
-class DeferredOneToOneField(DeferredField):
-
-    klass = models.OneToOneField
-
-
-class DeferredManyToManyField(DeferredField):
-
-    klass = models.ManyToManyField
+#class DeferredForeignKey(DeferredField):
+#
+#    klass = models.ForeignKey
 
 
+#class DeferredOneToOneField(DeferredField):
+#
+#    klass = models.OneToOneField
+
+
+#class DeferredManyToManyField(DeferredField):
+#
+#    klass = models.ManyToManyField
+
+
+"""
 def __extract_deferred_fields(cls, current_class, results):
     for k, v in cls.__dict__.iteritems():
         if isinstance(v, DeferredField):
@@ -116,7 +118,6 @@ def __extract_deferred_fields(cls, current_class, results):
                 results[v.model_alias].append((k, v))
     for base in cls.__bases__:
         __extract_deferred_fields(base, current_class, results)
-
 
 def construct(cls, **kwargs):
     needed_models = defaultdict(list)
@@ -150,6 +151,7 @@ def construct(cls, **kwargs):
         clsname = clsname.replace('-', '_')
         cls._classcache[key] = type(clsname, (cls, ), attrs)
     return cls._classcache[key]
+"""
 
 
 class Checker(object):
@@ -175,9 +177,14 @@ class FieldsChecker(object):
                             valid = False
                             break
                     else:
-                        attr = getattr(field, ckey, None)
-                        if not any((attr==cval,
-                                    (attr() if callable(attr) else attr)==cval,)):
+                        ckeys, fvalue = ckey.split('.'), field
+                        for i in ckeys:
+                            i, call = ((i[:-2], True,)
+                                       if i.endswith('()') else (i, False,))
+                            fvalue = getattr(fvalue, i, None)
+                            fvalue = fvalue() if call else fvalue
+
+                        if not fvalue == cval:
                             valid = False
                             break
                 if valid:
@@ -205,3 +212,17 @@ class CheckerMixin(object):
         for check in cls.checkers or []:
             check.check(cls, errors, **kwargs)
         return errors
+
+
+"""
+class Product(models.Product):
+    checkers = [
+        FieldsChecker({'user': {'type': ForeignKey},})
+    ]
+
+class SomeProduct(Product):
+    checkers = Product.checkers + [
+        FieldsChecker({'user': {'type': ForeignKey},})
+    ]
+"""
+

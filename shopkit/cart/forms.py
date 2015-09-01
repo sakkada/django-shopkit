@@ -1,89 +1,114 @@
+# -*- coding:utf-8 -*-
 from django import forms
-from django.utils.translation import ugettext_lazy as _, ugettext
-
-from ..forms.widgets import DecimalInput
-from ..product.forms import registry
-
-
-class QuantityForm(object):
-
-    def clean_quantity(self):
-        val = self.cleaned_data['quantity']
-        if val < 0:
-            raise forms.ValidationError(ugettext("Quantity cannot be negative"))
-        return val
+from django.core.exceptions import ObjectDoesNotExist, NON_FIELD_ERRORS
+from django.utils.translation import ugettext_lazy as _
+from satchless.item import InsufficientStock
 
 
-class AddToCartForm(forms.Form, QuantityForm):
+class AddToCartForm(forms.Form):
     """
     Form that adds a Variant quantity to a Cart.
+    It may be replaced by more advanced one, performing some checks.
 
-    It may be replaced by more advanced one, performing some checks, e.g.
-    verifying the number of items in stock.
+    This form will be mixed with shopkit.product.forms.BaseVariantForm
+    descendant form class (as last ancestor - Form(VariantForm, AddToCartForm))
+    and will be used in on_product_view handler via
+    cart.handler.AddToCartHandler (see product and cart app).
     """
+    quantity = forms.DecimalField(initial=1)
 
-    quantity = forms.DecimalField(_('Quantity'), initial=1)
-    target = forms.CharField(max_length=100, widget=forms.HiddenInput())
+    error_messages = {
+        'empty-stock': _('Sorry. This product is currently out of stock.'),
+        'variant-does-not-exists': _('Oops. We could not find that product.'),
+        'insufficient-stock': _('Only %(remaining)d remaining in stock.'),
+    }
 
-    def __init__(self, cart, data=None, *args, **kwargs):
-        self.cart = cart
-        if data and data.get('target') != self.cart.token:
-            data = None
-        super(AddToCartForm, self).__init__(data=data, *args, **kwargs)
-        self.fields['target'].initial = self.cart.token
-
-    def clean(self):
-        data = super(AddToCartForm, self).clean()
-        if 'quantity' in data:
-            qty = data['quantity']
-            add_result = self._verify_quantity(qty)
-            if add_result.quantity_delta < qty:
-                raise forms.ValidationError(add_result.reason)
-        return data
-
-    def _verify_quantity(self, qty):
-        return self.cart.add_item(self.get_variant(), qty, dry_run=True)
-
-    def save(self):
-        return self.cart.add_item(self.get_variant(),
-                                  self.cleaned_data['quantity'])
-
-
-class EditCartItemForm(forms.ModelForm, QuantityForm):
-
-    class Meta:
-        widgets = {
-            'quantity': DecimalInput(min_decimal_places=0),
-        }
+    cart = None
+    product = None
 
     def __init__(self, *args, **kwargs):
-        super(EditCartItemForm, self).__init__(*args, **kwargs)
-        if not self.is_bound:
-            self.data = None
+        self.cart = kwargs.pop('cart')
+        self.product = kwargs.pop('product') # it is product instance
+        super(AddToCartForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned_data = super(AddToCartForm, self).clean()
+        quantity = cleaned_data.get('quantity', None)
+        if quantity is None:
+            return cleaned_data
+
+        try:
+            variant = self.get_variant(cleaned_data)
+        except ObjectDoesNotExist:
+            msg = self.error_messages['variant-does-not-exists']
+            self.add_error(NON_FIELD_ERRORS, msg)
+        else:
+            cart_line = self.cart.get_line(variant)
+            old_quantity = cart_line.quantity if cart_line else 0
+            new_quantity = quantity + old_quantity
+            try:
+                self.cart.check_quantity(variant, new_quantity, None)
+            except InsufficientStock as e:
+                remaining = e.item.get_stock() - old_quantity
+                if remaining:
+                    msg = self.error_messages['insufficient-stock']
+                else:
+                    msg = self.error_messages['empty-stock']
+                self.add_error('quantity', msg % {'remaining': remaining})
+        return cleaned_data
+
+    def save(self):
+        """Adds CartLine into the Cart instance."""
+        variant = self.get_variant(self.cleaned_data)
+        self.cart.add(variant, self.cleaned_data['quantity'])
+        return self.cart.get_line(variant)
+
+    def add_error(self, name, value):
+        errors = self.errors.setdefault(name, self.error_class())
+        errors.append(value)
+
+    def get_variant(self, cleaned_data):
+        raise NotImplementedError()
+
+
+class ReplaceCartLineForm(AddToCartForm):
+    """
+    Replaces quantity in CartLine.
+    It may be replaced by more advanced one, performing some checks.
+
+    This form will be used in cart_app as CartItemForm to update each
+    cart_line object directly in cart main view.
+
+    Note: product (self.product), received in __init__ is already
+    variant object, because cart_line objects stores variant instances,
+    not products in "product" attribute (it called so in satchless CartLine).
+
+    Also it defines cart_line, because variant already defined.
+    """
+    cart_line = None
+
+    def __init__(self, *args, **kwargs):
+        super(ReplaceCartLineForm, self).__init__(*args, **kwargs)
+        self.cart_line = self.cart.get_line(self.product) # it is variant
 
     def clean_quantity(self):
-        qty = super(EditCartItemForm, self).clean_quantity()
-        qty_result = self.instance.cart.replace_item(self.instance.variant, qty,
-                                                     dry_run=True)
-        if qty_result.new_quantity < qty:
-            raise forms.ValidationError(qty_result.reason)
-        return qty_result.new_quantity
+        quantity = self.cleaned_data['quantity']
+        try:
+            self.cart.check_quantity(self.product, quantity, None)
+        except InsufficientStock as e:
+            msg = self.error_messages['insufficient-stock']
+            raise forms.ValidationError(msg % {'remaining': e.item.get_stock(),})
+        return quantity
 
-    def save(self, commit=True):
-        """
-        Do not call the original save() method, but use cart.replace_item()
-        instead.
-        """
-        self.instance.cart.replace_item(self.instance.variant,
-                                        self.cleaned_data['quantity'])
+    def clean(self):
+        return super(AddToCartForm, self).clean() # do not call parent's clean
 
+    def get_variant(self, cleaned_data):
+        """In cart form product is already variant (see above cls docstring)"""
+        return self.product
 
-def add_to_cart_variant_form_for_product(product,
-                                         addtocart_formclass=AddToCartForm,
-                                         registry=registry):
-    variant_formclass = registry.get_formclass(type(product))
-
-    class AddVariantToCartForm(addtocart_formclass, variant_formclass):
-        pass
-
-    return AddVariantToCartForm
+    def save(self):
+        """Update cart_line (usually replace quantity)."""
+        self.cart.add(self.product, self.cleaned_data['quantity'],
+                      replace=True)
+        return self.cart_line

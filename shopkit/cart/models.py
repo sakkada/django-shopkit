@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""
 from decimal import Decimal
 from collections import namedtuple
 from django.conf import settings
@@ -169,3 +170,4 @@ class CartItem(models.Model, ItemLine): # CheckerMixin
     def save(self, *args, **kwargs):
         assert self.quantity > 0
         return super(CartItem, self).save(*args, **kwargs)
+"""

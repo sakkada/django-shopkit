@@ -1,7 +1,7 @@
 from django import forms
-from django.apps import apps
 from django.forms.models import BaseModelFormSet
 from django.utils.translation import ugettext_lazy as _
+from . import models
 
 
 class DeliveryMethodForm(forms.ModelForm):
@@ -9,7 +9,7 @@ class DeliveryMethodForm(forms.ModelForm):
     delivery_type = forms.ChoiceField(label=_('Delivery method'), choices=[])
 
     class Meta:
-        model = apps.get_model('order.DeliveryGroup')
+        model = models.DeliveryGroup
         fields = ('delivery_type',)
 
     def __init__(self, delivery_queue, *args, **kwargs):
@@ -34,7 +34,7 @@ class PaymentMethodForm(forms.ModelForm):
     payment_type = forms.ChoiceField(choices=[])
 
     class Meta:
-        model = apps.get_model('order.Order')
+        model = models.Order
         fields = ('payment_type',)
 
     def __init__(self, payment_queue, *args, **kwargs):
@@ -46,7 +46,7 @@ class PaymentMethodForm(forms.ModelForm):
 class ShippingForm(forms.ModelForm):
 
     class Meta:
-        model = apps.get_model('order.DeliveryGroup')
+        model = models.DeliveryGroup
         fields = ['shipping_first_name', 'shipping_last_name',
                   'shipping_company_name', 'shipping_street_address_1',
                   'shipping_street_address_2', 'shipping_city',
@@ -57,7 +57,7 @@ class ShippingForm(forms.ModelForm):
 class BillingForm(forms.ModelForm):
 
     class Meta:
-        model = apps.get_model('order.Order')
+        model = models.Order
         fields = ['billing_first_name', 'billing_last_name',
                   'billing_company_name', 'billing_street_address_1',
                   'billing_street_address_2', 'billing_city',

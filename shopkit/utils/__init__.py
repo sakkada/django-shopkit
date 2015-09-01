@@ -2,6 +2,7 @@ import json
 from decimal import Decimal
 from django.http import HttpResponse
 
+
 def decimal_format(value, min_decimal_places=0):
     decimal_tuple = value.as_tuple()
     have_decimal_places = -decimal_tuple.exponent
@@ -14,6 +15,7 @@ def decimal_format(value, min_decimal_places=0):
             digits = digits[:-1]
         have_decimal_places -= 1
     return Decimal((decimal_tuple.sign, digits, -have_decimal_places))
+
 
 class JSONResponse(HttpResponse):
     class UndercoverDecimal(float):

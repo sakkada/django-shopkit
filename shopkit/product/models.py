@@ -1,9 +1,9 @@
-from django.db import models
-from django.utils.translation import ugettext_lazy as _
 import decimal
+from django.db import models
 
 from ..item import ItemRange, Item
-from ..utils.models import Subtyped, DeferredField
+from ..utils.models import Subtyped
+
 
 __all__ = ('Product', 'Variant')
 
@@ -42,6 +42,7 @@ class Variant(Subtyped, Item):
     """
     Django binding for a single variant of product
     """
+
     class Meta:
         abstract = True
 

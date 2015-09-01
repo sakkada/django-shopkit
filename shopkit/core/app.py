@@ -5,12 +5,13 @@ from django.shortcuts import redirect
 
 
 class SatchlessApp(object):
-
     app_name = None
     namespace = None
+    shop_app = None
 
-    def __init__(self, name=None):
+    def __init__(self, name=None, shop_app=None):
         self.app_name = name or self.app_name
+        self.shop_app = shop_app
 
     def get_context_data(self, request, **kwargs):
         context = {
@@ -53,3 +54,10 @@ def view(regex, **kwargs):
         func._routes.append((regex, kwargs))
         return func
     return view
+
+
+class ShopApp(SatchlessApp):
+    product_app = None
+    cart_app = None
+    checkout_app = None
+    order_app = None
