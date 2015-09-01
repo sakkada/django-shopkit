@@ -33,14 +33,14 @@ DATABASES = {
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'Europe/Warsaw'
+TIME_ZONE = 'Europe/Moscow'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE = 'en'
+LANGUAGE_CODE = 'ru'
 LANGUAGES = (
     ('en', u'English'),
-    ('pl', u'polski'),
+    ('ru', u'Russian'),
 )
 
 SITE_ID = 1
@@ -85,7 +85,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'pagination.middleware.PaginationMiddleware',
 )
 
 ROOT_URLCONF = 'urls'
@@ -105,95 +104,66 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.media',
     'django.core.context_processors.static',
     'django.contrib.messages.context_processors.messages',
-    'carts.context_processors.carts_sizes',
-    'core.context_processors.root_categories',
 )
+
 STATICFILES_DIRS = (
     os.path.join(PROJECT_ROOT, "static"),
 )
 
 
+# Application definition
 INSTALLED_APPS = (
+    # apps required before django apps
+
+    # contrib apps
+    'django.contrib.admin.apps.SimpleAdminConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    #'django.contrib.sitemaps',
+    #'django.contrib.webdesign',
 
-    'categories',
-    'grappelli',
-    'django.contrib.admin',
-    'django_images',
+    # project apps
+    'main',
+
+    # satchless shopkit apps
+
+    'shopkit.product',
+    'shopkit.contrib.product.category',
+    #'shopkit.contrib.productset',
+    #'shopkit.contact',
+    'shopkit.cart',
+    'shopkit.contrib.tax.flatgroups',
+    'shopkit.contrib.stock.singlestore',
+    'shopkit.order',
+    'shopkit.contrib.checkout.multistep',
+    #'shopkit.delivery',
+    #'shopkit.contrib.delivery.simplepost',
+    #'shopkit.payment',
+    'shop.core',
+    'shop.categories',
+    'shop.products',
+    'shop.carts',
+    'shop.orders',
+    'shop.checkouts',
+    'shop.payments',
+
+    # external apps
+    #'versatileimagefield',
+    #'babeldjango',
     'django_prices',
+    #'emailit',
     'mptt',
-    'satchless.product',
-    'satchless.category',
-    #'satchless.contrib.productset',
-    #'satchless.contact',
-    'satchless.cart',
-    'satchless.contrib.tax.flatgroups',
-    'satchless.contrib.stock.singlestore',
-    'satchless.order',
-    'satchless.contrib.checkout.multistep',
-    'satchless.delivery',
-    'satchless.contrib.delivery.simplepost',
-    'satchless.payment',
-    'products',
-    'south',
-    'pagination',
-    'core',
-    'carts',
-    'orders',
-    'checkouts',
-
-    'haystack',
-    'search.haystack_predictive',
-    'payments',
-    'payments.dummy',
-    'demo_payments',
+    #'payments',
+    #'selectable',
+    #'materializecssform',
+    #'rest_framework',
 )
 
-IMAGE_SIZES = {
-    'admin': {
-        'size': (100, 100),
-        'crop': True,
-    },
-    'admin-icon': {
-        'size': (22, 22),
-        'crop': True,
-    },
-    'category': {
-        'size': (230, 257),
-        'crop': True,
-    },
-    'category-product': {
-        'size': (178, 179),
-        'crop': True,
-    },
-    'product-detail': {
-        'size': (308, 310),
-        'crop': True,
-        'upscale': True,
-    },
-    'product-thumb': {
-        'size': (68, 68),
-        'crop': True,
-    },
-    'cart-product': {
-        'size': (158, 158),
-        'crop': True,
-    },
-    'order-preview': {
-        'size': ('56', '56'),
-        'crop': True,
-    },
-}
-
 SATCHLESS_DEFAULT_CURRENCY = 'EUR'
-
-INTERNAL_IPS = ['127.0.0.1']
-
 
 SATCHLESS_PRODUCT_VIEW_HANDLERS = [
     'carts.handler.carts_handler',
@@ -209,21 +179,7 @@ SATCHLESS_PAYMENT_PROVIDERS = [
 ]
 SATCHLESS_DJANGO_PAYMENT_TYPES = (('dummy', _('Dummy Payment Provider')),)
 
-PAYMENT_VARIANTS = {
-    'dummy': ('payments.dummy.DummyProvider', {
-              'url': lambda payment: reverse('thank-you',
-                                             args=(payment.satchless_payment_variant.order.token,))
-    })
-}
-
-HAYSTACK_SITECONF = 'search_sites'
-HAYSTACK_SEARCH_ENGINE = 'whoosh'
-HAYSTACK_WHOOSH_PATH = os.path.join(PROJECT_ROOT, 'whoosh_index')
-
 INTERNAL_IPS = ['127.0.0.1']
-
-# http://south.aeracode.org/ticket/520
-SOUTH_TESTS_MIGRATE = False
 
 try:
     execfile(os.path.join(PROJECT_ROOT, 'local_settings.py'))
