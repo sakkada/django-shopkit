@@ -48,10 +48,7 @@ class CheckoutApp(SatchlessApp):
         return redirect('order:details', order_token=order.token)
 
     def get_order(self, request, order_token):
-        try:
-            return self.Order.objects.get(token=order_token)
-        except self.Order.DoesNotExist:
-            return
+        return self.Order.objects.filter(token=order_token).first()
 
     def get_order_from_cart(self, request, cart, order=None):
         if not order:

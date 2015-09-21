@@ -20,7 +20,6 @@ class Category(MPTTModel):
 
     class Meta:
         abstract = True
-        app_label = 'product'
         verbose_name = _("category")
         verbose_name_plural = _("categories")
 

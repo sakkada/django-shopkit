@@ -9,8 +9,7 @@ import random
 
 from ..item import ItemSet, ItemLine
 from ..utils import countries
-#from ..utils.models import DeferredForeignKey
-from ..utils.models import CheckerMixin, FieldsChecker
+from ..utils.models import CheckModelMixin, FieldsChecker
 from . import signals
 
 
@@ -88,7 +87,6 @@ class Order(models.Model, ItemSet):
     class Meta:
         # Use described string to resolve ambiguity of the word 'order' in English.
         abstract = True
-        app_label = 'order'
         verbose_name = _('order (business)')
         verbose_name_plural = _('orders (business)')
         ordering = ('-last_status_change',)
@@ -162,7 +160,7 @@ class DeliveryInfo(ItemLine):
         return self.price
 
 
-class DeliveryGroup(CheckerMixin, models.Model, ItemSet):
+class DeliveryGroup(CheckModelMixin, models.Model, ItemSet):
 
     # order = DeferredForeignKey('order', related_name='groups', editable=False)
 
@@ -202,7 +200,6 @@ class DeliveryGroup(CheckerMixin, models.Model, ItemSet):
 
     class Meta:
         abstract = True
-        app_label = 'order'
 
     def __iter__(self):
         for i in self.get_items():
@@ -229,7 +226,7 @@ class DeliveryGroup(CheckerMixin, models.Model, ItemSet):
                                  unit_price_gross=price.gross)
 
 
-class OrderedItem(CheckerMixin, models.Model, ItemLine):
+class OrderedItem(CheckModelMixin, models.Model, ItemLine):
 
     checkers = [FieldsChecker({
         'delivery_group': {'type': models.ForeignKey, 'editable': False,
@@ -255,7 +252,6 @@ class OrderedItem(CheckerMixin, models.Model, ItemLine):
 
     class Meta:
         abstract = True
-        app_label = 'order'
 
     def get_price_per_item(self, **kwargs):
         return Price(net=self.unit_price_net, gross=self.unit_price_gross,

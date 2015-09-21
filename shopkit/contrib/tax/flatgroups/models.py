@@ -16,9 +16,6 @@ class TaxGroup(models.Model):
                                  help_text=_("Name of the rate which will be"
                                              " displayed to the user."))
 
-    class Meta:
-        app_label = 'product'
-    
     def __unicode__(self):
         return self.name
 

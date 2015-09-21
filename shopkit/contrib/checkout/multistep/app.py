@@ -29,6 +29,7 @@ class MultiStepCheckoutApp(app.CheckoutApp):
     DeliveryMethodFormSet = None
     ShippingForm = None
     ShippingFormSet = None
+    PaymentMethodForm = None
 
     def __init__(self, **kwargs):
         super(MultiStepCheckoutApp, self).__init__(**kwargs)
@@ -48,6 +49,8 @@ class MultiStepCheckoutApp(app.CheckoutApp):
                                  formset=forms.DeliveryMethodFormSet,
                                  form=self.DeliveryMethodForm,
                                  extra=0))
+
+        self.PaymentMethodForm = self.PaymentMethodForm or forms.PaymentMethodForm
 
     @view(r'^(?P<order_token>\w+)/$', name='checkout')
     def checkout(self, request, order_token):
@@ -104,6 +107,8 @@ class MultiStepCheckoutApp(app.CheckoutApp):
         User supplies further delivery details if needed.
         """
         order = self.get_order(request, order_token)
+        if not order or order.status != 'checkout':
+            return self.redirect_order(order)
         delivery_groups = order.groups.all()
         if not all([group.delivery_type for group in delivery_groups]):
             return self.redirect('delivery-method', order_token=order.token)
@@ -131,13 +136,12 @@ class MultiStepCheckoutApp(app.CheckoutApp):
         order = self.get_order(request, order_token)
         if not order or order.status != 'checkout':
             return self.redirect_order(order)
-        payment_form = forms.PaymentMethodForm(data=request.POST or None,
-                                               instance=order,
-                                               payment_queue=self.payment_queue)
-        if request.method == 'POST':
-            if payment_form.is_valid():
-                payment_form.save()
-                return self.redirect('payment-details', order_token=order.token)
+        payment_form = self.PaymentMethodForm(data=request.POST or None,
+                                              instance=order,
+                                              payment_queue=self.payment_queue)
+        if payment_form.is_valid():
+            payment_form.save()
+            return self.redirect('payment-details', order_token=order.token)
         context = self.get_context_data(request, order=order,
                                         payment_form=payment_form)
         return TemplateResponse(request, self.payment_method_templates, context)

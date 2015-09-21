@@ -81,78 +81,6 @@ def _store_content_type(sender, instance, **kwargs):
         instance.store_subtype(instance)
 
 
-#class DeferredField(object):
-#
-#    klass = models.Field
-#
-#    def __init__(self, model_alias, **kwargs):
-#        self.model_alias = model_alias
-#        self.kwargs = kwargs
-#        raise
-#
-#    def bind(self, model):
-#        return self.klass(model, **self.kwargs)
-
-
-#class DeferredForeignKey(DeferredField):
-#
-#    klass = models.ForeignKey
-
-
-#class DeferredOneToOneField(DeferredField):
-#
-#    klass = models.OneToOneField
-
-
-#class DeferredManyToManyField(DeferredField):
-#
-#    klass = models.ManyToManyField
-
-
-"""
-def __extract_deferred_fields(cls, current_class, results):
-    for k, v in cls.__dict__.iteritems():
-        if isinstance(v, DeferredField):
-            # make sure it was not constructed earlier
-            if isinstance(getattr(current_class, k), DeferredField):
-                results[v.model_alias].append((k, v))
-    for base in cls.__bases__:
-        __extract_deferred_fields(base, current_class, results)
-
-def construct(cls, **kwargs):
-    needed_models = defaultdict(list)
-    __extract_deferred_fields(cls, cls, needed_models)
-    # construct correct fields for them
-    new_fields = {}
-    for model_alias, model in kwargs.iteritems():
-        fields = needed_models.pop(model_alias, None)
-        if not fields:
-            raise TypeError('construct() got an unexpected keyword'
-                            ' argument \'%s\'' % (model_alias, ))
-        for field_name, field in fields:
-            new_fields[field_name] = field.bind(model)
-    # make sure no fields are missing
-    if needed_models:
-        raise TypeError('construct() did not get models for fields: %s' %
-                        (', '.join(needed_models.keys()), ))
-
-    # construct the Meta
-    class Meta:
-        abstract = True
-
-    # create a list of attributes
-    attrs = dict(new_fields, __module__=cls.__module__, Meta=Meta)
-    key = tuple(new_fields.items())
-    # try to cache results
-    if not hasattr(cls, '_classcache'):
-        cls._classcache = {}
-    if not key in cls._classcache:
-        clsname = '%s%x' % (cls.__name__, hash(key))
-        clsname = clsname.replace('-', '_')
-        cls._classcache[key] = type(clsname, (cls, ), attrs)
-    return cls._classcache[key]
-"""
-
 
 class Checker(object):
     def check(self, cls, errors, **kwargs):
@@ -203,12 +131,12 @@ class FieldsChecker(object):
                 ))
                 
 
-class CheckerMixin(object):
+class CheckModelMixin(object):
     checkers = None
     
     @classmethod
     def check(cls, **kwargs):
-        errors = super(CheckerMixin, cls).check(**kwargs)
+        errors = super(CheckModelMixin, cls).check(**kwargs)
         for check in cls.checkers or []:
             check.check(cls, errors, **kwargs)
         return errors
