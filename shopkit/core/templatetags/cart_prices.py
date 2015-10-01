@@ -1,6 +1,6 @@
 from django import template
 
-from ...product.templatetags.product_prices import BasePriceNode, parse_price_tag
+from .product_prices import BasePriceNode, parse_price_tag
 
 register = template.Library()
 

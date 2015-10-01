@@ -1,0 +1,11 @@
+syntax: glob
+*.swp
+*.pyc*
+*.orig*
+*.yml*
+*.backup*
+*.dump*
+.hg*
+
+syntax: regexp
+^(?!shopkit|demo)
