@@ -151,7 +151,7 @@ class MultiStepCheckoutApp(app.CheckoutApp):
         """
         Checkout step 3½
         If any payment details are needed, user will be asked for them.
-        Otherwise we redirect to  final confirmation.
+        Otherwise we redirect to final confirmation.
         """
         order = self.get_order(request, order_token)
         if not order or order.status != 'checkout':

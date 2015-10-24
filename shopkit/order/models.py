@@ -27,25 +27,36 @@ class PaymentInfo(ItemLine):
         return self.price
 
 
-class Order(models.Model, ItemSet):
+class Order(CheckModelMixin, models.Model, ItemSet):
+    CHECKOUT = 'checkout'
+    PAYMENT_PENDING = 'payment-pending'
+    PAYMENT_COMPLETE = 'payment-complete'
+    PAYMENT_FAILED = 'payment-failed'
+    DELIVERY = 'delivery'
+    CANCELLED = 'cancelled'
 
     STATUS_CHOICES = (
-        ('checkout', _('undergoing checkout')),
-        ('payment-pending', _('waiting for payment')),
-        ('payment-complete', _('paid')),
-        ('payment-failed', _('payment failed')),
-        ('delivery', _('shipped')),
-        ('cancelled', _('cancelled')),
+        (CHECKOUT , _('undergoing checkout'),),
+        (PAYMENT_PENDING, _('waiting for payment'),),
+        (PAYMENT_COMPLETE, _('paid'),),
+        (PAYMENT_FAILED, _('payment failed'),),
+        (DELIVERY, _('shipped'),),
+        (CANCELLED, _('cancelled'),),
     )
 
-    # fix: use defferable instead direct auth.User definition (django 1.5+)
-    #user = DeferredForeignKey(settings.AUTH_USER_MODEL,
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             blank=True, null=True, related_name='+')
-    
+    checkers = [FieldsChecker({
+        'user': {'type': models.ForeignKey, 'null': True, 'blank': True,},
+        'status': {'type': models.CharField, 'max_length': 32,
+                   'blank': False, 'null': False,},
+    })]
+
+    # user = models.ForeignKey(settings.AUTH_USER_MODEL,
+    #                          blank=True, null=True, related_name='+')
+
     # Do not set the status manually, use .set_status() instead.
-    status = models.CharField(_('order status'), max_length=32,
-                              choices=STATUS_CHOICES, default='checkout')
+    # status = models.CharField(_('order status'), max_length=32,
+    #                           choices=STATUS_CHOICES, default=CHECKOUT)
+
     created = models.DateTimeField(default=datetime.datetime.now,
                                    editable=False, blank=True)
     last_status_change = models.DateTimeField(default=datetime.datetime.now,
