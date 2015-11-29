@@ -28,7 +28,7 @@ REQUIREMENTS = [
     'django-prices >=0.4.0,<0.5a0'
 ]
 
-# EXTRAS = {
+EXTRAS = {
 #     'authorize.net payment provider': [
 #         'django-authorizenet >= 1.0',
 #         'unidecode'
@@ -42,7 +42,7 @@ REQUIREMENTS = [
 #     'stripe payment provider': [
 #         'stripe',
 #     ],
-# }
+}
 
 setup(name='shopkit',
       author='Guchetl Murat',
