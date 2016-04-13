@@ -20,7 +20,7 @@ class AddToCartForm(forms.Form):
     error_messages = {
         'empty-stock': _('Sorry. This product is currently out of stock.'),
         'variant-does-not-exists': _('Oops. We could not find that product.'),
-        'insufficient-stock': _('Only %(remaining)d remaining in stock.'),
+        'insufficient-stock': _('Only %(remaining)s remaining in stock.'),
     }
 
     cart = None
@@ -50,11 +50,10 @@ class AddToCartForm(forms.Form):
                 self.cart.check_quantity(variant, new_quantity, None)
             except InsufficientStock as e:
                 remaining = e.item.get_stock() - old_quantity
-                if remaining:
-                    msg = self.error_messages['insufficient-stock']
-                else:
-                    msg = self.error_messages['empty-stock']
-                self.add_error('quantity', msg % {'remaining': remaining})
+                msg = self.error_messages[
+                    'insufficient-stock' if remaining else 'empty-stock'
+                ]
+                self.add_error('quantity', msg % {'remaining': remaining,})
         return cleaned_data
 
     def save(self):
@@ -85,6 +84,7 @@ class ReplaceCartLineForm(AddToCartForm):
 
     Also it defines cart_line, because variant already defined.
     """
+    signature = forms.IntegerField(initial=1, widget=forms.HiddenInput)
     cart_line = None
 
     def __init__(self, *args, **kwargs):
@@ -96,8 +96,11 @@ class ReplaceCartLineForm(AddToCartForm):
         try:
             self.cart.check_quantity(self.product, quantity, None)
         except InsufficientStock as e:
-            msg = self.error_messages['insufficient-stock']
-            raise forms.ValidationError(msg % {'remaining': e.item.get_stock(),})
+            remaining = e.item.get_stock()
+            msg = self.error_messages[
+                'insufficient-stock' if remaining else 'empty-stock'
+            ]
+            raise forms.ValidationError(msg % {'remaining': remaining,})
         return quantity
 
     def clean(self):

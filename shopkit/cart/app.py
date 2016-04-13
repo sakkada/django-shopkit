@@ -33,35 +33,41 @@ class CartApp(SatchlessApp):
     def get_cart_for_request(self, request):
         raise NotImplementedError()
 
-    def _get_cart_item_form(self, request, cart, item):
-        initial = {'quantity': item.get_quantity() or None,}
-        form = self.CartLineForm(data=request.POST or None,
-                                 cart=cart,
-                                 product=item.product,
-                                 prefix='cart-%i' % (item.product.id,),
-                                 initial=initial)
+    # cart handling
+    def get_form_for_cartline(self, request, cart, line):
+        initial = {'quantity': line.get_quantity(),}
+        prefix = 'cartline-%i' % line.product.id
+        received = request.POST.get('%s-signature' % prefix, None)
+        data = request.POST if received else None
+        form = self.CartLineForm(data=data, cart=cart, product=line.product,
+                                 initial=initial, prefix=prefix)
         return form
 
-    def cart_item_form_valid(self, request, form, item):
+    # should return dict (as context), any HttpResponse or None
+    def on_cartline_form_valid(self, request, form, line):
         form.save()
-        return redirect(request.get_full_path())
+        return None
 
-    def _handle_cart(self, cart, request):
-        cart_item_forms = []
-        for item in cart:
-            form = self._get_cart_item_form(request, cart, item)
-            if request.method == 'POST' and form.is_valid():
-                return self.cart_item_form_valid(request, form, item)
+    def on_cart_view(self, cart, request):
+        cart_item_forms, valid = [], False
+        for line in cart:
+            form = self.get_form_for_cartline(request, cart, line)
+            if form.is_valid():
+                result = self.on_cartline_form_valid(request, form, line)
+                if result:
+                    return result
+                valid = True
             cart_item_forms.append(form)
-        return {
-            'cart': cart,
-            'cart_item_forms': cart_item_forms,
+
+        # refresh current page if at least one valid form
+        return redirect(request.get_full_path()) if valid else {
+            'cart': cart, 'cart_item_forms': cart_item_forms,
         }
 
     @view(r'^view/$', name='details')
     def cart(self, request):
         cart = self.get_cart_for_request(request)
-        context = self._handle_cart(cart, request)
+        context = self.on_cart_view(cart, request)
         if isinstance(context, HttpResponse):
             return context
         context = self.get_context_data(request, **context)
