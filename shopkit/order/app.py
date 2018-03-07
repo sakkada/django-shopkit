@@ -1,96 +1,54 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404
-from django.template.response import TemplateResponse
+from django.shortcuts import get_object_or_404, render
 from django.utils.decorators import method_decorator
-
-from ..core.app import SatchlessApp, view
-#from ..utils.models import construct
-from . import models
+from django.conf.urls import url
+from ..core.app import ShopKitApp
 
 
-class OrderApp(SatchlessApp):
+class OrderApp(ShopKitApp):
 
     app_name = 'order'
     namespace = 'order'
+
     Order = None
-    order_details_templates = [
-        'satchless/order/view.html',
-        'satchless/order/%(order_model)s/view.html'
-    ]
+    DeliveryGroup = None
+    OrderLine = None
+
     order_list_templates = [
-        'satchless/order/list.html',
-        'satchless/order/%(order_model)s/list.html'
+        'shopkit/order/list.html',
+    ]
+    order_details_templates = [
+        'shopkit/order/view.html',
     ]
 
     def __init__(self, **kwargs):
         super(OrderApp, self).__init__(**kwargs)
-        assert self.Order, ('You need to subclass OrderApp and provide'
-                            ' Order')
-
-    @view(r'^$', name='index')
-    @method_decorator(login_required)
-    def index(self, request):
-        orders = self.Order.objects.filter(user=request.user)
-        context = self.get_context_data(request, orders=orders)
-        format_data = {
-            'order_model': self.Order._meta.model_name
-        }
-        templates = [p % format_data for p in self.order_list_templates]
-        return TemplateResponse(request, templates, context)
-
-    @view(r'^(?P<order_token>[0-9a-zA-Z]+)/$', name='details')
-    def details(self, request, order_token):
-        order = self.get_order(request, order_token=order_token)
-        context = self.get_context_data(request, order=order)
-        format_data = {
-            'order_model': order._meta.model_name
-        }
-        templates = [p % format_data for p in self.order_details_templates]
-        return TemplateResponse(request, templates, context)
+        assert self.Order and self.DeliveryGroup and self.OrderLine, (
+            'You need to subclass OrderApp and provide Order,'
+            ' DeliveryGroup and OrderLine.'
+        )
 
     def get_order(self, request, order_token):
-        if request.user.is_authenticated():
-            orders = self.Order.objects.filter(user=request.user)
-        else:
-            orders = self.Order.objects.filter(user=None)
-        order = get_object_or_404(orders, token=order_token)
-        return order
+        orders = self.Order.objects.filter(
+            user=request.user if request.user.is_authenticated() else None)
+        return get_object_or_404(orders, token=order_token)
 
+    # Views methods section
+    # ---------------------
+    def get_urls(self):
+        return [
+            url(r'^$', self.index, name='index'),
+            url(r'^(?P<order_token>[\w-]+)/$', self.details,
+                name='details'),
+        ]
 
-"""
-class MagicOrderApp(OrderApp):
+    @method_decorator(login_required)
+    def index(self, request, **kwargs):
+        orders = self.Order.objects.filter(user=request.user)
+        context = self.get_context_data(request, orders=orders)
+        return render(request, self.order_list_templates, context)
 
-    DeliveryGroup = None
-    OrderedItem = None
-
-    def __init__(self, shop_app=None, **kwargs):
-        #self.Order = (self.Order or self.construct_order_class())
-        #self.DeliveryGroup = (self.DeliveryGroup or
-        #                      self.construct_delivery_group_class(self.Order))
-        #self.OrderedItem = (
-        #    self.OrderedItem or
-        #    self.construct_ordered_item_class(self.DeliveryGroup,
-        #                                      shop_app.product_app.Variant))
-        super(MagicOrderApp, self).__init__(shop_app=shop_app, **kwargs)
-
-    #def construct_delivery_group_class(self, order_class):
-    #    class DeliveryGroup(construct(models.DeliveryGroup,
-    #                                  order=order_class)):
-    #        pass
-    #
-    #    return DeliveryGroup
-
-    #def construct_order_class(self):
-    #    class Order(models.Order):
-    #        pass
-    #    return Order
-
-    #def construct_ordered_item_class(self, delivery_group_class, variant_class):
-    #    class OrderedItem(construct(models.OrderedItem,
-    #                                delivery_group=delivery_group_class,
-    #                                variant=variant_class)):
-    #        pass
-    #
-    #    return OrderedItem
-"""
-
+    def details(self, request, order_token, **kwargs):
+        order = self.get_order(request, order_token=order_token)
+        context = self.get_context_data(request, order=order)
+        return render(request, self.order_details_templates, context)

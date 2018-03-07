@@ -1,8 +1,8 @@
 from ..core.handler import QueueHandler
-
 from ..delivery import DeliveryProvider, DeliveryType
 from ..payment import PaymentProvider, PaymentType
 from . import Partitioner
+
 
 ### PARTITIONERS
 class PartitionerQueue(Partitioner, QueueHandler):

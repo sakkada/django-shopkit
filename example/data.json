@@ -1,0 +1,142 @@
+[
+{
+  "model": "products.category",
+  "pk": 1,
+  "fields": {
+    "parent": null,
+    "name": "Category A",
+    "description": "",
+    "meta_description": "",
+    "slug": "category-a",
+    "lft": 1,
+    "rght": 6,
+    "tree_id": 1,
+    "level": 0
+  }
+},
+{
+  "model": "products.category",
+  "pk": 2,
+  "fields": {
+    "parent": 1,
+    "name": "Category A-A",
+    "description": "",
+    "meta_description": "",
+    "slug": "category-a-a",
+    "lft": 2,
+    "rght": 3,
+    "tree_id": 1,
+    "level": 1
+  }
+},
+{
+  "model": "products.category",
+  "pk": 3,
+  "fields": {
+    "parent": 1,
+    "name": "Category A-B",
+    "description": "",
+    "meta_description": "",
+    "slug": "category-a-b",
+    "lft": 4,
+    "rght": 5,
+    "tree_id": 1,
+    "level": 1
+  }
+},
+{
+  "model": "products.category",
+  "pk": 4,
+  "fields": {
+    "parent": null,
+    "name": "Category B",
+    "description": "",
+    "meta_description": "",
+    "slug": "category-b",
+    "lft": 1,
+    "rght": 6,
+    "tree_id": 2,
+    "level": 0
+  }
+},
+{
+  "model": "products.category",
+  "pk": 5,
+  "fields": {
+    "parent": 4,
+    "name": "Category B-A",
+    "description": "",
+    "meta_description": "",
+    "slug": "category-b-a",
+    "lft": 2,
+    "rght": 3,
+    "tree_id": 2,
+    "level": 1
+  }
+},
+{
+  "model": "products.category",
+  "pk": 6,
+  "fields": {
+    "parent": 4,
+    "name": "Category B-B",
+    "description": "",
+    "meta_description": "",
+    "slug": "category-b-b",
+    "lft": 4,
+    "rght": 5,
+    "tree_id": 2,
+    "level": 1
+  }
+},
+{
+  "model": "products.discount",
+  "pk": 1,
+  "fields": {
+    "name": "Discount by 10%",
+    "rate": "10.00",
+    "rate_name": "10%"
+  }
+},
+{
+  "model": "products.discount",
+  "pk": 2,
+  "fields": {
+    "name": "Discount by 50%",
+    "rate": "50.00",
+    "rate_name": "50%"
+  }
+},
+{
+  "model": "products.tax",
+  "pk": 1,
+  "fields": {
+    "name": "Half Tax",
+    "rate": "50.00",
+    "rate_name": "Half Tax"
+  }
+},
+{
+  "model": "products.tax",
+  "pk": 2,
+  "fields": {
+    "name": "Quarter Tax",
+    "rate": "25.00",
+    "rate_name": "Quarter Tax"
+  }
+},
+{
+  "model": "products.maker",
+  "pk": 1,
+  "fields": {
+    "name": "Good Manufacturer"
+  }
+},
+{
+  "model": "products.maker",
+  "pk": 2,
+  "fields": {
+    "name": "Best Manufacturer"
+  }
+}
+]

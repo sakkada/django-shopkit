@@ -1,2 +1,3 @@
-include *.txt
-include *.rst
+include README.md
+recursive-include shopkit *.html
+global-exclude *.py[co]

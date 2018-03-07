@@ -1,4 +1,4 @@
-{% extends 'satchless/checkout/base.html' %}
+{% extends 'shopkit/checkout/base.html' %}
 {% load i18n %}
 {% block checkout %}
     <h2>{% trans "Choose delivery method" %}:</h3>
@@ -8,7 +8,7 @@
           {% if order.groups.count > 1 %}
             <h3>{% trans "Delivery group" %}:</h3>
             <ul>
-            {% include 'satchless/checkout/snippets/delivery_group.html' %}
+            {% include 'shopkit/checkout/snippets/delivery_group.html' %}
             </ul>
           {% endif %}
             {{ form.as_p }}

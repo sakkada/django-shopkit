@@ -1,22 +1,23 @@
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from mptt.models import MPTTModel
 
-# from ....utils.models import DeferredManyToManyField
 
-__all__ = ('Category', 'CategorizedProduct')
+__all__ = ('Category', 'CategorizedProductMixin')
 
 
 class Category(MPTTModel):
+    parent = models.ForeignKey(
+        'self', null=True, blank=True, related_name='children',
+        on_delete=models.CASCADE)
 
     name = models.CharField(_('name'), max_length=128)
     description = models.TextField(_('description'), blank=True)
-    meta_description = models.TextField(_('meta description'), blank=True,
-            help_text=_("Description used by search and indexing engines"))
+    meta_description = models.TextField(
+        _('meta description'), blank=True,
+        help_text=_('Description used by search and indexing engines'))
     slug = models.SlugField(max_length=50)
-    parent = models.ForeignKey('self', null=True, blank=True,
-                               related_name='children')
 
     class Meta:
         abstract = True
@@ -26,10 +27,11 @@ class Category(MPTTModel):
     def __unicode__(self):
         return self.name
 
-    @models.permalink
     def get_absolute_url(self):
-        return ('product:category-details',
-                (self.parents_slug_path(), self.slug))
+        return reverse('product:category-details', kwargs={
+            'parent_slugs': self.parents_slug_path(),
+            'category_slug': self.slug,
+        })
 
     def parents_slug_path(self):
         parents = '/'.join(c.slug for c in self.get_ancestors())
@@ -37,8 +39,8 @@ class Category(MPTTModel):
 
 
 class CategorizedProductMixin(models.Model):
-
-    categories = models.ManyToManyField('product.category', related_name='products')
+    categories = models.ManyToManyField(
+        'products.Category', related_name='products')
 
     class Meta:
         abstract = True

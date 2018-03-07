@@ -1,0 +1,49 @@
+{% load i18n %}
+{% load prices %}
+{% load product_prices %}
+<tr>
+    <td class="name product-description">
+{% if variant.product.make %}
+        <span class="manufacture">{{ variant.product.make }}</span>
+{% endif %}
+        <h2><a href="{{ variant.product.get_absolute_url }}">{{ variant.product.name }}</a></h2>
+        <ul class="variant-attrs">
+          <li>Size: <strong>{{ variant.get_size_display }}</strong></li>
+          <li>Color: <strong>{{ variant.get_color_display }}</strong></li>
+        </ul>
+    </td>
+    <td class="product-price">
+        <div class="amounts">
+{% if undiscounted_unit_price and undiscounted_unit_price != unit_price %}
+            <span class="strike">{% gross undiscounted_unit_price %}</span><br />
+{% endif %}
+            <span class="fullprice">{% gross unit_price %}</span>
+        </div>
+    </td>
+    <td class="qty">
+        {% if not readonly %}
+        <form action="" method="post">
+            &times; {% for field in form %}{{ field }}{% endfor %}
+            <input type="submit" value="{% trans "update" %}" name="update" />
+            {% csrf_token %}
+        </form>
+            {% if form.errors %}
+        <ul class="errorlist">
+                {% for error in form.errors.values %}
+                <li>{{ error }}</li>
+                {% endfor %}
+        </ul>
+            {% endif %}
+        {% else %}
+            &times; {{ item.quantity }}
+        {% endif %}
+    </td>
+    <td class="product-price">
+        <div class="amounts">
+{% if undiscounted_item_price and undiscounted_item_price != item_price %}
+            <span class="strike">{% gross undiscounted_item_price %}</span><br />
+{% endif %}
+            <span class="fullprice">{% gross item_price %}</span>
+        </div>
+    </td>
+</tr>

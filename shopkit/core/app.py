@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from django.conf.urls import patterns, url
-from django.core.urlresolvers import reverse
+from django.conf.urls import url
+from django.urls import reverse
 from django.shortcuts import redirect
 
 
-class SatchlessApp(object):
+class ShopKitApp(object):
     app_name = None
     namespace = None
     shop_app = None
@@ -29,34 +29,26 @@ class SatchlessApp(object):
         return reverse(to, args=args, kwargs=kwargs, current_app=self.app_name)
 
     def get_urls(self):
-        urls = []
-        klass = type(self)
-        # walk the class as walking the instance evaluates descriptors which is
-        # a Really Bad Idea™
-        for item in dir(klass):
-            obj = getattr(klass, item)
-            # look for methods
-            if hasattr(obj, 'im_func'):
-                method = getattr(self, item)
-                for regex, params in getattr(obj, '_routes', []):
-                    urls.append(url(regex=regex, view=method, **params))
-        return patterns('', *urls)
+        """
+        Method returns same data, that regular urls.py contains.
+        Each App class contains app_name and namespace, which are means
+        application namespace and instance namespace in terms of django url
+        resolving.
+        To have explicit url configuration, it is good to directrly define
+        get_urls method in App classes, combined with to or more ancestor
+        classes, instead of usage method inheritance.
+        Code in all builtin App classes structured such way: all views methods
+        and method get_urls located in the end of class definition.
+        """
+        raise NotImplementedError('%s: get_urls is not implemented.' %
+                                  type(self))
 
     @property
     def urls(self):
         return self.get_urls(), self.app_name, self.namespace
 
 
-def view(regex, **kwargs):
-    def view(func):
-        if not hasattr(func, '_routes'):
-            func._routes = []
-        func._routes.append((regex, kwargs))
-        return func
-    return view
-
-
-class ShopApp(SatchlessApp):
+class ShopApp(ShopKitApp):
     product_app = None
     cart_app = None
     checkout_app = None

@@ -1,9 +1,9 @@
-{% extends 'satchless/checkout/base.html' %}
+{% extends 'shopkit/checkout/base.html' %}
 {% load i18n %}
 {% block checkout %}
     <h2>{% trans "Confirmation" %}</h2>
     <h3>{% trans "Order #" %}{{ order.id }}</h3>
-    {% include 'satchless/order/snippets/order_view.html' %}
+    {% include 'shopkit/order/snippets/order_view.html' %}
     <form action="{{ formdata.action }}" method="{{ formdata.method }}">{% csrf_token %}
         {{ formdata.form.as_p }}
         <button type="submit">{% trans "Confirm" %}</button>

@@ -1,0 +1,56 @@
+{% extends 'shopkit/checkout/base.html' %}
+{% load i18n %}
+
+
+{% block title %}Подтверждение заказа № {{ order.pk }} | {{ block.super }}{% endblock %}
+
+
+{% block breadcrumbs %}
+<nav class="checkoutSteps">
+    <ol>
+        <li>
+            <a href="{% url "cart:details" %}" class="stepLink">Мой заказ</a>
+        </li><li>
+            <a href="{% url "checkout:delivery-details" order_token=order.token %}" class="stepLink">Адрес доставки</a>
+        </li><li>
+            <span class="stepLink stepLink-active">Подтверждение заказа</span>
+        </li>
+    </ol>
+</nav>
+
+{% endblock %}
+
+{% block content %}
+
+<section class="checkout">
+
+    <h2>Подтверждение заказа № {{ order.pk }}</h2>
+
+    <dl class="profileInfo profileInfo-order u-descriptionListReset">{% with group=order.groups.first %}
+        <dt>Имя клиента:</dt><dd>{{ group.shipping_last_name }} {{ group.shipping_first_name }}</dd>
+        <dt>e-mail:</dt><dd>{{ order.user.email }}</dd>
+        <dt>Телефон:</dt><dd>{{ group.shipping_phone|default:'—' }}</dd>
+        <dt>Адрес:</dt><dd>
+            г. {{ group.shipping_city }}{% if group.shipping_street_address_1 %}, {% endif %}{{ group.shipping_street_address_1 }}{% if group.shipping_street_address_2 %}, {% endif %}{{ group.shipping_street_address_2 }}
+        </dd>
+    </dl>{% endwith %}
+
+    {% include "shopkit/checkout/snippets/order_preview.html" %}
+
+    <a href="{% url "checkout:delivery-method" order_token=order.token %}" class="editAddress">Delivery setup</a>
+    <a href="{% url "checkout:payment-method" order_token=order.token %}" class="editAddress">Payment setup</a>
+    <div class="orderTotal">
+        Итого: <span class="orderTotalValue">{{ order.get_total.gross }} <span class="currency">{{ order.get_total.currency }}</span></span>
+    </div>
+
+    <form action="" method="post">
+        {% csrf_token %}
+        {{ form.order_token }}
+        <center>
+            <p>Проверьте, пожалуйста все введенные данные и нажмите кнопку «Подтверждаю».</p>
+        </center>
+        <input class="confirmOrder" type="submit" value="Подтверждаю">
+    </form>
+
+</section>
+{% endblock %}

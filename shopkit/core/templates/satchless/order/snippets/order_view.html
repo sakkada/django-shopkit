@@ -31,8 +31,8 @@
         </tr>
     </tfoot>
     <tbody>
-        {% for item in group.items.all %}
-        {% with product=item.product_variant.get_subtype_instance.product %}
+        {% for item in group.lines.all %}
+        {% with product=item.variant.product %}
         <tr>
             <td>
                 {% url 'product:details' product.slug product.pk as product_url %}

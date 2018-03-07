@@ -1,0 +1,37 @@
+{% extends 'shopkit/order/base.html' %}
+{% load i18n %}
+
+
+{% block title %}{% trans "My orders" %}{% endblock %}
+
+
+{% block breadcrumbs %}
+{{ block.super }}
+    <li><a href="{% url 'order:index' %}">{% trans "My orders" %}</a></li>
+{% endblock %}
+
+
+{% block content %}
+<h1>{% trans "My orders" %}</h1>
+<table>
+    <thead>
+        <tr>
+            <th>{% trans "Order #" %}</th>
+            <th>{% trans "Created" %}</th>
+            <th>{% trans "Status" %}</th>
+            <th>{% trans "Price" %}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+        {% url 'order:details' order.token as order_url %}
+        <tr class="{% cycle odd even %}">
+            <td><a href="{{ order_url }}">{{ order.pk }}</a></td>
+            <td>{{ order.created|date }} {{ order.created|time }}</td>
+            <td>{{ order.get_status_display }}</td>
+            <td>{{ order.get_total|floatformat:2 }} <span class="currency">{{ order.currency }}</span></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

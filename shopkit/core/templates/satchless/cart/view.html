@@ -1,14 +1,20 @@
-{% extends 'satchless/cart/base.html' %}
-{% load i18n promote prices product_prices cart_prices %}
+{% extends 'shopkit/cart/base.html' %}
+{% load i18n shopkit_tags %}
+
+
 {% block title %}{% trans "My cart" %}{% endblock %}
+
+
 {% block breadcrumbs %}
     {{ block.super }}
     <li><a href="">{% trans "My cart" %}</a></li>
 {% endblock %}
+
+
 {% block content %}
     <h1>{% trans "My cart" %}</h1>
     {% csrf_token %}
-    {% if cart_item_forms %}
+    {% if cart_line_forms %}
     <table class="cart">
         <thead>
             <tr>
@@ -22,7 +28,7 @@
             </tr>
         </thead>
         <tbody>
-    {% for form in cart_item_forms %}
+    {% for form in cart_line_forms %}
         {% if form.quantity.errors %}
             <tr class="errors">
                 <td></td>
@@ -36,8 +42,8 @@
             {% cartitem_price form.instance as item_price %}
             <tr class="item">
                 <td rowspan="2">{{ forloop.counter }}</td>
-                <td rowspan="2">{% promote form.instance.variant as variant %}
-                    <a href="{{ variant.product.get_absolute_url }}">{{ variant }}</a>
+                <td rowspan="2">
+                    <a href="{{ form.instance.variant.product.get_absolute_url }}">{{ form.instance.variant }}</a>
                 </td>
                 <td class="numerical unitPrice">
                     {% gross unit_price %}
@@ -56,7 +62,7 @@
                     {% tax item_price %}
                 </td>
                 <td rowspan="2">
-                    <form method="POST" action="{% url cart:remove-item form.instance.id %}">
+                    <form method="POST" action="{% url "cart:remove-item" form.instance.id %}">
                         {% csrf_token %}
                         <button type="submit">{% trans "Delete" %}</button>
                     </form>
@@ -92,7 +98,7 @@
             </tr>
         </tfoot>
     </table>
-    <form action="{% url checkout:prepare-order %}" method="post">
+    <form action="{% url "checkout:prepare-order" %}" method="post">
         {% csrf_token %}
         <button type="submit">{% trans "Check out" %}</button>
     </form>

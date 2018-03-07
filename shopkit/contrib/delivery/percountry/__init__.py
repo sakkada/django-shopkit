@@ -1,7 +1,7 @@
 from django.utils.translation import ugettext
-
 from ....delivery import DeliveryProvider, DeliveryType
 from . import models
+
 
 class PostDeliveryProvider(DeliveryProvider):
     def __unicode__(self):

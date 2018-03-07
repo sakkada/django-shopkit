@@ -1,0 +1,63 @@
+{% extends "shopkit/base.html" %}
+{% load product_url %}
+{% load prices %}
+{% load product_prices %}
+
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href="{% url 'product:category-index' %}">Products</a></li>
+    {% for cat in path %}
+    <li><a href="{{ cat.get_absolute_url }}">{{ cat }}</a></li>
+    {% endfor %}
+{% endblock %}
+
+
+{% block content %}
+<div class="grid_4 alpha"><div class="sidebar"><h4>{{ category.name }}</h4></div></div>
+<div class="grid_20 omega products">
+{% if category.is_leaf_node %}
+    {% with category.products.all as products %}
+        {% if products %}
+            {% for product in products %}
+                {% with product|product_in_category_url:category as product_url %}
+    <div class="grid_5">
+        <div class="product">
+            <div class="description">
+                <span class="manufacture">
+                    {% if product.make %}{{ product.make }}{% endif %}
+                </span>
+                <h3><a href="{{ product_url }}">{{ product.name }}</a></h3>
+                <div class="price">
+                    {% product_price_range product as price_range %}
+                    {% product_price_range product discount=0 as undiscounted_price_range %}
+                    {% if price_range.min_price != undiscounted_price_range.min_price %}
+                        <span class="strike">{% gross undiscounted_price_range.min_price %}</span>
+                    {% endif %}
+                    <span class="fullprice">{% gross price_range.min_price %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+                {% endwith %}
+            {% endfor %}
+        {% else %}
+        <div class="no-items">No products yet!</div>
+        {% endif %}
+    <div class="clear"></div>
+    {% endwith %}
+{% else %}
+    {% with category.get_children as subcategories %}
+        {% if subcategories %}
+            {% for child in subcategories %}
+                <div class="grid_5">
+                    <div class="category">
+                        <h3><a href="{{ child.get_absolute_url }}">{{ child }}</a></h3>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+{% endif %}
+</div>
+{% endblock %}

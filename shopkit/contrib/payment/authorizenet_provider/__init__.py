@@ -31,7 +31,7 @@ class AuthorizeNetProvider(PaymentProvider):
     def get_shipping_data(self, order):
         result = {}
         for dg in order.groups.all():
-            if dg.require_shipping_address:
+            if dg.shipping_address_required:
                 result['ship_to_first_name'] = dg.shipping_first_name
                 result['ship_to_last_name'] = dg.shipping_last_name
                 result['ship_to_company'] = dg.shipping_company_name

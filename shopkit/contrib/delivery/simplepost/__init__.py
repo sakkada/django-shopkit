@@ -10,7 +10,7 @@ class PostDeliveryProvider(DeliveryProvider):
 
     def enum_types(self, customer=None, delivery_group=None):
         for record in models.PostShippingType.objects.all():
-            if not delivery_group or delivery_group.require_shipping_address:
+            if not delivery_group or delivery_group.shipping_address_required:
                 yield DeliveryType(provider=self, typ=record.typ,
                                    name=record.name)
 

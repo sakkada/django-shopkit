@@ -1,11 +1,8 @@
 syntax: glob
 *.swp
-*.pyc*
-*.orig*
-*.yml*
-*.backup*
-*.dump*
-.hg*
+*.orig
+*.pyc
+*.dump
 
 syntax: regexp
-^(?!shopkit|demo)
+^(?!shopkit|example)

@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 from django import dispatch
 
-cart_content_changed = dispatch.Signal(providing_args=['cart', 'cart_line',])
-cart_content_changed.__doc__ = """
-Sent whenever cart's content has been changed.
-"""
-
-cart_item_added = dispatch.Signal(providing_args=['request', 'cart','cart_line',])
-cart_item_added.__doc__ = """
-Sent whenever new item is added to the cart.
+cart_line_changed = dispatch.Signal(providing_args=['cart', 'cart_line',])
+cart_line_changed.__doc__ = """
+Sent whenever cart's line has been changed, added or removed.
+Technically, removed line is added with zero quantity, such cart_line will be
+already removed from storage and will have zero quantity.
 """

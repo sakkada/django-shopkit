@@ -1,8 +1,13 @@
-{% extends 'satchless/product/base.html' %}
+{% extends 'shopkit/product/base.html' %}
 {% load i18n product_url promote %}
-{% load url from future %}
+
+
 {% block title %}{{ category }} | {{ block.super }}{% endblock %}
+
+
 {% block meta-description %}{% if category.meta_description %}{{ category.meta_description }}{% else %}{{ block.super }}{% endif %}{% endblock %}
+
+
 {% block breadcrumbs %}
     {{ block.super }}
     <li><a href="{% url 'product:category-index' %}">{% trans "Products" %}</a></li>
@@ -10,6 +15,8 @@
     <li><a href="{{ cat.get_absolute_url }}">{{ cat }}</a></li>
     {% endfor %}
 {% endblock %}
+
+
 {% block content %}
     <h1>{{ category.name }}</h1>
     {% if category.description %}

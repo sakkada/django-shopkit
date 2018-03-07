@@ -1,4 +1,4 @@
-{% extends 'satchless/order/base.html' %}
+{% extends 'shopkit/order/base.html' %}
 {% load i18n %}
 {% block breadcrumbs %}
     {{ block.super }}
@@ -14,7 +14,7 @@
         <h2>{% trans "Delivery method" %}: {{ delivery_type.name }}</h2>
         <h3>{% trans "Items delivered using this method" %}:</h3>
         <ul>
-        {% include 'satchless/checkout/snippets/delivery_group.html' %}
+        {% include 'shopkit/checkout/snippets/delivery_group.html' %}
         </ul>
         <h3>{% trans "Delivery details" %}:</h3>
         {{ form.as_p }}

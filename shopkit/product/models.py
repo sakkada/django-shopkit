@@ -1,50 +1,35 @@
-import decimal
 from django.db import models
-
-from ..item import ItemRange, Item
-from ..utils.models import Subtyped
+from django.urls import reverse
+from satchless.item import ItemRange, Item
 
 
 __all__ = ('Product', 'Variant')
 
 
-class Product(Subtyped, ItemRange):
-    """
-    Django binding for a product group (product with multiple variants)
-    """
-
-    quantity_quantizer = decimal.Decimal(1)
-    quantity_rounding = decimal.ROUND_HALF_UP
+class Product(models.Model, ItemRange):
+    """Django binding for a product group (product with multiple variants)."""
 
     class Meta:
         abstract = True
 
     def __repr__(self):
-        return '<Product #%r>' % self.pk
+        return '<Product #%d>' % self.pk
 
     def __iter__(self):
         return iter(self.variants.all())
 
-    @models.permalink
     def get_absolute_url(self):
-        return 'product:details', (self.pk,)
-
-    def quantize_quantity(self, quantity):
-        """
-        Returns sanitized quantity. By default it rounds the value to the
-        nearest integer.
-        """
-        return decimal.Decimal(quantity).quantize(
-            self.quantity_quantizer, rounding=self.quantity_rounding)
+        return reverse('product:details', kwargs={'product_pk': self.pk,})
 
 
-class Variant(Subtyped, Item):
-    """
-    Django binding for a single variant of product
-    """
+class Variant(models.Model, Item):
+    """Django binding for a single variant of product."""
+
+    product = models.ForeignKey(
+        'products.Product', related_name='variants', on_delete=models.CASCADE)
 
     class Meta:
         abstract = True
 
     def __repr__(self):
-        return '<Variant #%r>' % (self.id,)
+        return '<Variant #%d>' % self.id
