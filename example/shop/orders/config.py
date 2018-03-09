@@ -7,4 +7,5 @@ class OrdersConfig(AppConfig):
     verbose_name = u'Orders'
 
     def ready(self):
-        pass
+        from . import listeners
+        listeners.start_listening()

@@ -18,7 +18,6 @@ class CheckoutApp(ShopKitApp):
 
     app_name = 'checkout'
     namespace = 'checkout'
-    order_session_key = 'shop-order'
 
     Order = None
 
@@ -46,7 +45,9 @@ class CheckoutApp(ShopKitApp):
         user = request.user if request.user.is_authenticated else None
         return self.Order.objects.filter(token=token, user=user).first()
 
-    def get_order_from_cart(self, request, cart, order=None):
+    def get_order_from_cart(self, request, cart):
+        order = self.Order.objects.filter(
+            status=self.Order.SC.CHECKOUT, cart=cart).first()
         if not order:
             order = self.Order.objects.create(cart=cart, user=cart.user)
         elif order.is_empty():
@@ -132,7 +133,7 @@ class CheckoutApp(ShopKitApp):
     def prepare_order(self, request, **kwargs):
         """
         Step 0: Prepare order.
-        Create order object from cart or get created before by session key,
+        Create order object from cart or get created before by cart object,
         check_quantity for cart and redirect to step 1.
         (next step is "checkout", no previous step, fully automated)
         """
@@ -144,13 +145,8 @@ class CheckoutApp(ShopKitApp):
         if not self.shop_app.cart_app.check_cart(cart):
             return self.shop_app.cart_app.redirect('fix-cart-lines')
 
-        # get order from session or create from cart and after check it
-        order = request.session.get(self.order_session_key, None)
-        if order:
-            order = self.Order.objects.filter(
-                token=order, status=self.Order.SC.CHECKOUT, cart=cart).first()
-        if not order or order.is_empty():
-            order = self.get_order_from_cart(request, cart, order=order)
+        # get order by cart or create from cart and after check it
+        order = self.get_order_from_cart(request, cart)
         if not self.check_order(order):
             return self.redirect_order(order)
 
@@ -163,7 +159,6 @@ class CheckoutApp(ShopKitApp):
         # clear waste (inactive) orders
         self.clear_inactive_orders(order, cart, user=user)
 
-        request.session[self.order_session_key] = order.token
         return self.redirect('checkout', order_token=order.token)
 
     def confirmation(self, request, order_token, **kwargs):

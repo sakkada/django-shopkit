@@ -255,6 +255,9 @@ class DeliveryGroup(models.Model, ItemSet):
     shipping_street_address_2 = models.CharField(
         _("street address 2"), max_length=256, blank=True)
 
+    date_create = models.DateTimeField(editable=False, auto_now_add=True)
+    date_update = models.DateTimeField(editable=False, auto_now=True)
+
     class Meta:
         abstract = True
 
@@ -295,6 +298,9 @@ class OrderLine(models.Model, ItemLine):
         _('unit price (net)'), max_digits=12, decimal_places=4)
     unit_price_gross = models.DecimalField(
         _('unit price (gross)'), max_digits=12, decimal_places=4)
+
+    date_create = models.DateTimeField(editable=False, auto_now_add=True)
+    date_update = models.DateTimeField(editable=False, auto_now=True)
 
     class Meta:
         abstract = True

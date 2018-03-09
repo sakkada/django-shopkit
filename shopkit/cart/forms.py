@@ -32,13 +32,20 @@ class CartLineAddForm(forms.Form):
 
     cart = None
     product = None
+    replace = False  # add or replace quantity in cart_line
 
     def __init__(self, *args, **kwargs):
         self.cart = kwargs.pop('cart')
         self.product = kwargs.pop('product')  # it is a Product instance
+        self.replace = kwargs.pop('replace', self.replace)
         super(CartLineAddForm, self).__init__(*args, **kwargs)
 
     def clean(self):
+        """
+        Clean the form.
+        Makes sure the total quantity in cart (added or replaced) does not
+        exceed available quantity.
+        """
         cleaned_data = super(CartLineAddForm, self).clean()
         quantity = cleaned_data.get('quantity', None)
         if quantity is None:
@@ -51,6 +58,7 @@ class CartLineAddForm(forms.Form):
         else:
             cart_line = self.cart.get_line(variant)
             cart_line_quantity = cart_line.quantity if cart_line else 0
+            quantity += cart_line_quantity if not self.replace else 0
             try:
                 variant.check_quantity(quantity)
             except InsufficientStock as e:
@@ -66,12 +74,14 @@ class CartLineAddForm(forms.Form):
         return cleaned_data
 
     def save(self):
-        """Adds CartLine into the Cart instance."""
+        """Add or replace the product variant and quantity to the cart."""
         variant = self.get_variant(self.cleaned_data)
         return self.cart.add(
-            variant, quantity=self.cleaned_data['quantity'], replace=True)
+            variant, quantity=self.cleaned_data['quantity'],
+            replace=self.replace)
 
     def get_variant(self, cleaned_data):
+        """Return a product variant that matches submitted values."""
         raise NotImplementedError()
 
 

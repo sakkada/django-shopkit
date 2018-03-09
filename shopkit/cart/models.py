@@ -19,6 +19,9 @@ class Cart(models.Model, ItemSet):
         _('token'), max_length=36, unique=True, editable=False,
         default=get_unique_uuid_string)
 
+    date_create = models.DateTimeField(editable=False, auto_now_add=True)
+    date_update = models.DateTimeField(editable=False, auto_now=True)
+
     class Meta:
         abstract = True
 
@@ -115,6 +118,9 @@ class CartLine(models.Model, ItemLine):
         _('quantity'), default=1,
         validators=[MinValueValidator(0), MaxValueValidator(999),])
     data = JSONField(blank=True, default={})
+
+    date_create = models.DateTimeField(editable=False, auto_now_add=True)
+    date_update = models.DateTimeField(editable=False, auto_now=True)
 
     class Meta:
         unique_together = ('cart', 'variant', 'data',)

@@ -15,7 +15,7 @@ class ProductApp(app.CategorizedProductApp):
     def on_product_view(self, product, request):
         # cart form processing
         cart = self.shop_app.cart_app.get_cart_for_request(request)
-        form = self.shop_app.cart_app.AddToCartForm(
+        form = self.shop_app.cart_app.CartLineAddForm(
             data=request.POST or None, cart=cart, product=product)
         if form.is_valid():
             cart_line = form.save()
