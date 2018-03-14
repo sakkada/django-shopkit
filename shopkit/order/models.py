@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import random
 from uuid import uuid4
 from django.conf import settings
@@ -83,27 +84,27 @@ class Order(models.Model, ItemSet):
     status_history = models.TextField(editable=False, blank=True)
 
     billing_first_name = models.CharField(
-        _("first name"), max_length=256, blank=True)
+        _('first name'), max_length=256, blank=True)
     billing_last_name = models.CharField(
-        _("last name"), max_length=256, blank=True)
+        _('last name'), max_length=256, blank=True)
     billing_phone = models.CharField(
-        _("phone number"), max_length=30, blank=True)
+        _('phone number'), max_length=30, blank=True)
     billing_company_name = models.CharField(
-        _("company name"), max_length=256, blank=True)
+        _('company name'), max_length=256, blank=True)
 
     billing_country = models.CharField(
-        _("country"), max_length=2, blank=True,
+        _('country'), max_length=2, blank=True,
         choices=countries.COUNTRY_CHOICES)
     billing_country_area = models.CharField(
-        _("country administrative area"), max_length=256, blank=True)
-    billing_city = models.CharField(_("city"), max_length=256, blank=True)
+        _('country administrative area'), max_length=256, blank=True)
+    billing_city = models.CharField(_('city'), max_length=256, blank=True)
     billing_postal_code = models.CharField(
-        _("postal code"), max_length=20, blank=True)
+        _('postal code'), max_length=20, blank=True)
 
     billing_street_address_1 = models.CharField(
-        _("street address 1"), max_length=256, blank=True)
+        _('street address 1'), max_length=256, blank=True)
     billing_street_address_2 = models.CharField(
-        _("street address 2"), max_length=256, blank=True)
+        _('street address 2'), max_length=256, blank=True)
 
     payment_type = models.CharField(max_length=256, blank=True)
     payment_type_name = models.CharField(
@@ -235,25 +236,25 @@ class DeliveryGroup(models.Model, ItemSet):
     shipping_address_required = models.BooleanField(
         default=False, editable=False)
 
-    shipping_first_name = models.CharField(_("first name"), max_length=256)
-    shipping_last_name = models.CharField(_("last name"), max_length=256)
+    shipping_first_name = models.CharField(_('first name'), max_length=256)
+    shipping_last_name = models.CharField(_('last name'), max_length=256)
     shipping_phone = models.CharField(
-        _("phone number"), max_length=30, blank=True)
+        _('phone number'), max_length=32, blank=True)
     shipping_company_name = models.CharField(
-        _("company name"), max_length=256, blank=True)
+        _('company name'), max_length=256, blank=True)
 
     shipping_country = models.CharField(
-        _("country"), max_length=2, blank=True,
+        _('country'), max_length=2, blank=True,
         choices=countries.COUNTRY_CHOICES)
     shipping_country_area = models.CharField(
-        _("country administrative area"), max_length=256, blank=True)
-    shipping_city = models.CharField(_("city"), max_length=256)
-    shipping_postal_code = models.CharField(_("postal code"), max_length=20)
+        _('country administrative area'), max_length=256, blank=True)
+    shipping_city = models.CharField(_('city'), max_length=256)
+    shipping_postal_code = models.CharField(_('postal code'), max_length=20)
 
     shipping_street_address_1 = models.CharField(
-        _("street address 1"), max_length=256)
+        _('street address 1'), max_length=256)
     shipping_street_address_2 = models.CharField(
-        _("street address 2"), max_length=256, blank=True)
+        _('street address 2'), max_length=256, blank=True)
 
     date_create = models.DateTimeField(editable=False, auto_now_add=True)
     date_update = models.DateTimeField(editable=False, auto_now=True)
@@ -311,3 +312,6 @@ class OrderLine(models.Model, ItemLine):
 
     def get_quantity(self):
         return self.quantity
+
+    def __unicode__(self):
+        return u'%s × %d' % (self.variant or self.name, self.quantity,)

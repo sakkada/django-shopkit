@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.translation import ugettext_lazy as _
 from django.contrib import messages
@@ -50,31 +50,48 @@ class CartApp(ShopKitApp):
             checked = cart.check_lines_quantities()
         return checked
 
-    def get_form_for_cartline(self, request, cart, line):
-        prefix = 'cartline-%i' % line.variant.id
-        initial = {'quantity': line.get_quantity(),}
+    def get_form_for_cartline(self, request, cart, cart_line):
+        prefix = 'cartline-%i' % cart_line.variant.id
+        initial = {'quantity': cart_line.get_quantity(),}
         received = '%s-quantity' % prefix in request.POST
         form = self.CartLineReplaceForm(
-            data=request.POST if received else None,
-            prefix=prefix, cart=cart, variant=line.variant, initial=initial)
+            data=request.POST if received else None, prefix=prefix,
+            cart=cart, variant=cart_line.variant, initial=initial)
         return form
 
-    def on_cartline_form_valid(self, request, form, line):
+    def on_cartline_form_valid(self, request, form, cart_line):
         form.save()
 
     def on_cart_view(self, cart, request):
         if not self.check_cart(cart):
+            if request.is_ajax():
+                return JsonResponse({'error': 'fix-cart-lines'}, status=400)
             return self.redirect('fix-cart-lines')
 
         cart_line_forms, valid = [], False
-        for line in cart:
-            form = self.get_form_for_cartline(request, cart, line)
+        for cart_line in cart:
+            form = self.get_form_for_cartline(request, cart, cart_line)
             if form.is_valid():
-                result = self.on_cartline_form_valid(request, form, line)
-                if result:
-                    return result
+                self.on_cartline_form_valid(request, form, cart_line)
                 valid = True
             cart_line_forms.append(form)
+
+        if request.is_ajax():
+            return JsonResponse({
+                'count': len(cart),
+                'price': cart.get_total().gross,
+                'currency': cart.get_currency(),
+                'lines': {
+                    form.cart_line.variant_id: {
+                        'variant_id': form.cart_line.variant_id,
+                        'quantity': form.cart_line.get_quantity(),
+                        'unit_price': form.cart_line.get_price_per_item().gross,
+                        'price': form.cart_line.get_total().gross,
+                        'processed': form.is_bound,
+                        'errors': form.errors or None,
+                    } for form in cart_line_forms
+                }
+            })
 
         # refresh current page if at least one valid form
         return redirect('./') if valid else {

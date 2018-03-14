@@ -46,11 +46,15 @@ class CheckoutApp(ShopKitApp):
         return self.Order.objects.filter(token=token, user=user).first()
 
     def get_order_from_cart(self, request, cart):
+        """
+        Create or get any cart's previous order in CHECKOUT status,
+        clean it (remove all delivery groups) and partition by cart items.
+        """
         order = self.Order.objects.filter(
             status=self.Order.SC.CHECKOUT, cart=cart).first()
         if not order:
             order = self.Order.objects.create(cart=cart, user=cart.user)
-        elif order.is_empty():
+        else:
             order.groups.all().delete()
 
         self.partition_cart(cart, order)
@@ -63,11 +67,11 @@ class CheckoutApp(ShopKitApp):
             raise ImproperlyConfigured('Unhandled items remaining in cart.')
         for partition in filter(None, partitions):
             delivery_group = order.create_delivery_group(partition)
-            for cartline in partition:
-                price = cartline.get_price_per_item(cart=cart,
+            for cart_line in partition:
+                price = cart_line.get_price_per_item(cart=cart,
                                                     **pricing_context)
-                delivery_group.create_order_line(cartline.variant,
-                                                 cartline.quantity, price)
+                delivery_group.create_order_line(cart_line.variant,
+                                                 cart_line.quantity, price)
 
     def clear_inactive_orders(self, order, cart, user=None):
         self.Order.objects.filter(
