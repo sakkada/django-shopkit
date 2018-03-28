@@ -30,7 +30,7 @@ class OrderApp(ShopKitApp):
 
     def get_order(self, request, order_token):
         orders = self.Order.objects.filter(
-            user=request.user if request.user.is_authenticated() else None)
+            user=request.user if request.user.is_authenticated else None)
         return get_object_or_404(orders, token=order_token)
 
     # Views methods section

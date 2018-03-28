@@ -7,7 +7,7 @@ class SingleStepCheckoutApp(app.CheckoutApp):
     BillingForm = None
 
     checkout_templates = [
-        'shopkit/checkout/checkout.html'
+        'shopkit/checkout/checkout.html',
     ]
 
     def __init__(self, **kwargs):
