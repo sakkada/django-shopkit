@@ -8,6 +8,7 @@ from jsonfield import JSONField
 from satchless.item import ItemSet, ItemLine, InsufficientStock
 from ..utils import get_unique_uuid_string
 from . import signals
+from . import managers
 
 
 class Cart(models.Model, ItemSet):
@@ -29,11 +30,11 @@ class Cart(models.Model, ItemSet):
         return 'Cart(user=%s, token=%s)' % (self.user, self.token,)
 
     def __iter__(self):
-        for i in self.lines.all():
+        for i in self.lines.active():
             yield i
 
     def __len__(self):
-        return self.lines.count()
+        return self.lines.active().count()
 
     def __nonzero__(self):
         return True  # need to set cart as True object if __len__ is zero
@@ -45,16 +46,16 @@ class Cart(models.Model, ItemSet):
         """Return a line matching the given variant and data."""
         if data is None:
             data = {}
-        lines = self.lines.filter(variant=variant)
+        lines = self.lines.active().filter(variant=variant)
         lines = [line for line in lines if line.data == data]
         return lines[0] if lines else None
 
     def is_empty(self):
-        return not self.lines.exists()
+        return not self.lines.active().exists()
 
     def check_lines_quantities(self):
         try:
-            for line in self.lines.all():
+            for line in self.lines.active():
                 if not line.quantity:
                     return False
                 line.variant.check_quantity(line.quantity)
@@ -63,7 +64,7 @@ class Cart(models.Model, ItemSet):
         return True
 
     def fix_lines_quantities(self):
-        for line in self.lines.all():
+        for line in self.lines.active():
             try:
                 line.variant.check_quantity(line.quantity)
             except InsufficientStock:
@@ -121,6 +122,8 @@ class CartLine(models.Model, ItemLine):
 
     date_create = models.DateTimeField(editable=False, auto_now_add=True)
     date_update = models.DateTimeField(editable=False, auto_now=True)
+
+    objects = managers.CartLineManager()
 
     class Meta:
         unique_together = ('cart', 'variant', 'data',)
